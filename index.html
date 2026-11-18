@@ -19,9 +19,49 @@
           }
         }
       }
-    }
+    };
+
+    window.demoDayPrefill = function () {
+      var emailIds = ['landing-login-email', 'login-email'];
+      var passIds = ['landing-login-password', 'login-password'];
+      var statusIds = ['landing-login-status', 'login-status-msg'];
+
+      emailIds.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.value = 'demoday@recipme.app';
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+
+      passIds.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.value = 'RecipME2026!';
+          el.dispatchEvent(new Event('input', { bubbles: true }));
+          el.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+      });
+
+      statusIds.forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.textContent = 'Demo Day credentials prefilled - click Sign In below.';
+          el.className = 'text-small text-tagGreen font-medium';
+          el.classList.remove('hidden');
+        }
+      });
+
+      var signInBtn = document.getElementById('btn-landing-sign-in');
+      if (signInBtn) {
+        signInBtn.classList.remove('btn-secondary');
+        signInBtn.classList.add('btn-main');
+        signInBtn.focus();
+      }
+    };
   </script>
-  <link rel="stylesheet" href="style.css?v=6">
+  <link rel="stylesheet" href="style.css?v=7">
 </head>
 <body class="min-h-screen flex flex-col bg-cream text-ink">
 
@@ -56,7 +96,7 @@
         </div>
 
         <div class="bg-white/95 rounded-2xl p-6 sm:p-8 shadow-sm border border-stone-300/90 space-y-5">
-          <button type="button" id="btn-landing-demo-login" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
+          <button type="button" id="btn-landing-demo-login" onclick="window.demoDayPrefill()" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
             Demo Day Login
           </button>
 
@@ -66,14 +106,14 @@
             <div class="flex-grow border-t border-stone-300/80"></div>
           </div>
 
-          <form id="landing-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4">
+          <form id="landing-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4" autocomplete="off">
             <div>
               <label for="landing-login-email" class="text-small block mb-1">Email</label>
-              <input type="email" id="landing-login-email" class="recipme-input" placeholder="demoday@recipme.app" required>
+              <input type="email" id="landing-login-email" class="recipme-input" placeholder="demoday@recipme.app" autocomplete="off" required>
             </div>
             <div>
               <label for="landing-login-password" class="text-small block mb-1">Password</label>
-              <input type="password" id="landing-login-password" class="recipme-input" placeholder="Enter password" required>
+              <input type="password" id="landing-login-password" class="recipme-input" placeholder="Enter password" autocomplete="off" required>
             </div>
             <div id="landing-login-status" class="text-small hidden"></div>
             <button type="submit" id="btn-landing-sign-in" class="btn-secondary w-full !min-h-[46px] font-semibold">
@@ -164,4 +204,46 @@
         Signed in with the <strong>Demo Day</strong> presentation account. You can sign out below to return to the login screen.
       </p>
 
-      <button type="button" id="btn-demo-prefill" class="btn-main w-full
+      <button type="button" id="btn-demo-prefill" onclick="window.demoDayPrefill()" class="btn-main w-full mb-5">
+        Demo Day Login
+      </button>
+
+      <form id="modal-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4 pt-4 border-t border-stone-300/80" autocomplete="off">
+        <div>
+          <label for="login-email" class="text-small block mb-1">Email</label>
+          <input type="email" id="login-email" class="recipme-input" placeholder="demoday@recipme.app" autocomplete="off" required>
+        </div>
+        <div>
+          <label for="login-password" class="text-small block mb-1">Password</label>
+          <input type="password" id="login-password" class="recipme-input" placeholder="Enter password" autocomplete="off" required>
+        </div>
+        <div id="login-status-msg" class="text-small hidden"></div>
+        <div class="flex items-center gap-3 pt-1">
+          <button type="button" onclick="UI.logoutToLoginScreen()" class="btn-secondary flex-1">Sign Out</button>
+          <button type="submit" class="btn-main flex-1">Sign In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="delete-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-[380px] w-full p-6 shadow-xl border border-gray-200">
+      <h3 id="delete-modal-title" class="text-heading mb-2">Are you sure you want to delete this recipe?</h3>
+      <p id="delete-modal-desc" class="text-body text-muted mb-6">
+        This will permanently remove it from your recipe notebook.
+      </p>
+      <div class="flex items-center gap-3">
+        <button onclick="UI.closeDeleteModal()" class="btn-secondary flex-1">
+          Keep recipe
+        </button>
+        <button id="btn-confirm-delete" class="btn-delete flex-1">
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js?v=7"></script>
+</body>
+</html>

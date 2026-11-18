@@ -4,31 +4,28 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RecipME — Personal Recipe Notebook</title>
-  <!-- Load Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
           colors: {
-            primary: '#C2410C',    // Main buttons (Done, Turn into Recipe) & active input border
-            cream: '#FBF7F2',      // Warm cream page background behind white recipe cards
-            ink: '#1F2937',        // All main text
-            muted: '#6B7280',      // Small text, field labels, hints, "Saved automatically"
-            tagGreen: '#3F7D3A',   // Selected tag & difficulty chips, active filters
-            danger: '#B91C1C'      // Delete button & "Are you sure?" warning modal
+            primary: '#C2410C',
+            cream: '#FBF7F2',
+            ink: '#1F2937',
+            muted: '#6B7280',
+            tagGreen: '#3F7D3A',
+            danger: '#B91C1C'
           }
         }
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=5">
+  <link rel="stylesheet" href="style.css?v=6">
 </head>
 <body class="min-h-screen flex flex-col bg-cream text-ink">
 
-  <!-- =======================================================================
-       DEDICATED INITIAL LOGIN SCREEN (Shown first before entering RecipME)
-       ======================================================================= -->
+  <!-- INITIAL LOGIN SCREEN -->
   <section id="login-screen" class="min-h-screen flex flex-col justify-between bg-cream px-4 py-8 sm:py-12">
     <div class="web-container flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -41,7 +38,7 @@
         </div>
       </div>
 
-      <button type="button" onclick="UI.toggleLargeText()" 
+      <button type="button" onclick="UI.toggleLargeText()"
               class="px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-sm font-medium text-ink min-h-[42px] flex items-center gap-1.5 transition"
               title="Make text larger for easier reading">
         <span class="font-bold text-base">Aa</span>
@@ -59,7 +56,6 @@
         </div>
 
         <div class="bg-white/95 rounded-2xl p-6 sm:p-8 shadow-sm border border-stone-300/90 space-y-5">
-          <!-- Primary One-Click Demo Day Login Prefill Button -->
           <button type="button" id="btn-landing-demo-login" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
             Demo Day Login
           </button>
@@ -70,7 +66,6 @@
             <div class="flex-grow border-t border-stone-300/80"></div>
           </div>
 
-          <!-- Credential Form (Prefilled when Demo Day Login is clicked; submits on Sign In) -->
           <form id="landing-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4">
             <div>
               <label for="landing-login-email" class="text-small block mb-1">Email</label>
@@ -78,4 +73,95 @@
             </div>
             <div>
               <label for="landing-login-password" class="text-small block mb-1">Password</label>
-              <input type="password" id="landing-login-password" class="recipme-input" placeholder="••••••••••••
+              <input type="password" id="landing-login-password" class="recipme-input" placeholder="Enter password" required>
+            </div>
+            <div id="landing-login-status" class="text-small hidden"></div>
+            <button type="submit" id="btn-landing-sign-in" class="btn-secondary w-full !min-h-[46px] font-semibold">
+              Sign In
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center text-small">
+      RecipME Personal Recipe Notebook
+    </div>
+  </section>
+
+  <!-- AUTHENTICATED APPLICATION SHELL -->
+  <div id="authenticated-app" class="hidden min-h-screen flex flex-col">
+    <header class="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-stone-300/80">
+      <div class="web-container px-4 sm:px-8 lg:px-12 py-3 sm:py-0 sm:h-20 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        <button onclick="UI.switchTab('recipes')" class="flex items-center gap-2.5 sm:gap-3 text-left focus:outline-none group shrink-0">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-sm group-hover:opacity-95 transition">
+            R
+          </div>
+          <div>
+            <span class="font-bold text-xl sm:text-2xl tracking-tight text-ink block leading-none">RecipME</span>
+            <span class="text-xs text-muted hidden md:block mt-1">Personal Recipe Notebook</span>
+          </div>
+        </button>
+
+        <div class="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap justify-end">
+          <nav class="flex items-center gap-1 sm:gap-2">
+            <button id="nav-tab-recipes" onclick="UI.switchTab('recipes')"
+                    class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
+              <span>Recipes</span>
+            </button>
+            <button id="nav-tab-ideas" onclick="UI.switchTab('ideas')"
+                    class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
+              <span>Ideas</span>
+            </button>
+          </nav>
+
+          <div class="h-6 w-px bg-stone-300 hidden sm:block"></div>
+
+          <button id="btn-large-text" onclick="UI.toggleLargeText()"
+                  class="px-2.5 sm:px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-1.5 transition"
+                  title="Make text larger for easier reading while cooking">
+            <span class="font-bold text-sm sm:text-base">Aa</span>
+            <span id="large-text-label" class="hidden lg:inline">Larger text</span>
+          </button>
+
+          <div id="auth-header-slot"></div>
+
+          <button onclick="UI.startNewBlankRecipe()" class="btn-main !min-h-[40px] sm:!min-h-[42px] !py-1.5 sm:!py-2 !px-3.5 sm:!px-4 !text-sm sm:!text-base hidden sm:inline-flex">
+            + New recipe
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <div id="storage-error-banner" class="hidden web-container mt-4 px-4 sm:px-8 lg:px-12">
+      <div class="p-4 rounded-xl bg-red-50 border border-danger text-danger text-body">
+        We could not save your last change because your device's storage is full. Please free up some space so your recipes stay safe.
+      </div>
+    </div>
+
+    <main id="app-workspace" class="flex-1 w-full web-container px-4 sm:px-8 lg:px-12 py-6 sm:py-10"></main>
+
+    <footer class="border-t border-stone-300/70 mt-16 py-8">
+      <div class="web-container px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-small">
+        <span>RecipME Personal Recipe Notebook</span>
+        <div class="flex items-center gap-4">
+          <button onclick="UI.logoutToLoginScreen()" class="underline hover:text-ink">
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ACCOUNT MODAL -->
+  <div id="auth-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-cream rounded-2xl max-w-[430px] w-full p-6 shadow-xl border border-stone-300">
+      <div class="flex items-start justify-between gap-3 mb-2">
+        <h3 class="text-heading">Demo Day Account</h3>
+        <button type="button" onclick="UI.closeAuthModal()" class="btn-icon !w-9 !h-9" title="Close">X</button>
+      </div>
+      <p class="text-small mb-5">
+        Signed in with the <strong>Demo Day</strong> presentation account. You can sign out below to return to the login screen.
+      </p>
+
+      <button type="button" id="btn-demo-prefill" class="btn-main w-full

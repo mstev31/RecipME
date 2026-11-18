@@ -85,20 +85,12 @@
               Sign In
             </button>
           </form>
-
-          <!-- Optional Secondary Persona Switcher -->
-          <div class="pt-4 border-t border-stone-300/80 flex items-center justify-between text-small">
-            <span>Demoing family cook persona?</span>
-            <button type="button" onclick="UI.triggerDorisDemoPrefill()" class="text-primary font-semibold underline">
-              Doris Thibodeaux Login
-            </button>
-          </div>
         </div>
       </div>
     </div>
 
     <div class="text-center text-small">
-      RecipME Personal Recipe Notebook • Presentation Demo Build
+      RecipME Personal Recipe Notebook
     </div>
   </section>
 
@@ -137,7 +129,7 @@
 
           <div class="h-6 w-px bg-stone-300 hidden sm:block"></div>
 
-          <!-- PBI 18: Larger Text Toggle for family cooks (Doris persona) -->
+          <!-- Larger Text Toggle for easier reading while cooking -->
           <button id="btn-large-text" onclick="UI.toggleLargeText()" 
                   class="px-2.5 sm:px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-1.5 transition"
                   title="Make text larger for easier reading while cooking">
@@ -155,7 +147,7 @@
       </div>
     </header>
 
-    <!-- PBI 20: Plain-language storage warning banner (hidden unless triggered) -->
+    <!-- Plain-language storage warning banner (hidden unless triggered) -->
     <div id="storage-error-banner" class="hidden web-container mt-4 px-4 sm:px-8 lg:px-12">
       <div class="p-4 rounded-xl bg-red-50 border border-danger text-danger text-body">
         We could not save your last change because your device's storage is full. Please free up some space so your recipes stay safe.
@@ -171,21 +163,9 @@
     <footer class="border-t border-stone-300/70 mt-16 py-8">
       <div class="web-container px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-small">
         <span>RecipME Personal Recipe Notebook</span>
-        <div class="flex flex-wrap items-center justify-center gap-4">
-          <button onclick="UI.openAuthModal()" class="underline hover:text-ink">
-            Switch Demo Account
-          </button>
-          <span>•</span>
+        <div class="flex items-center gap-4">
           <button onclick="UI.logoutToLoginScreen()" class="underline hover:text-ink">
             Sign Out
-          </button>
-          <span>•</span>
-          <button onclick="UI.openDatabaseModal()" class="underline hover:text-ink">
-            View 3NF Database / Export SQL
-          </button>
-          <span>•</span>
-          <button onclick="UI.confirmResetDemoData()" class="underline hover:text-danger">
-            Reset Demo Data
           </button>
         </div>
       </div>
@@ -194,7 +174,7 @@
   </div>
 
   <!-- =======================================================================
-       ACCOUNT SWITCHER MODAL (Accessible from header/footer once signed in)
+       ACCOUNT MODAL (Accessible from header once signed in)
        ======================================================================= -->
   <div id="auth-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-cream rounded-2xl max-w-[430px] w-full p-6 shadow-xl border border-stone-300">
@@ -203,7 +183,7 @@
         <button type="button" onclick="UI.closeAuthModal()" class="btn-icon !w-9 !h-9" title="Close">✕</button>
       </div>
       <p class="text-small mb-5">
-        Use our one-click <strong>Demo Day Login</strong> to prefill presentation credentials, or return to the main login screen.
+        Signed in with the <strong>Demo Day</strong> presentation account. You can sign out below to return to the login screen.
       </p>
 
       <!-- One-Click Demo Day Login Button -->
@@ -211,7 +191,7 @@
         Demo Day Login
       </button>
 
-      <!-- Credential Form (Prefilled automatically when Demo Day Login is clicked) -->
+      <!-- Credential Form -->
       <form onsubmit="UI.handleCredentialLogin(event)" class="space-y-4 pt-4 border-t border-stone-300/80">
         <div>
           <label for="login-email" class="text-small block mb-1">Email</label>
@@ -227,19 +207,11 @@
           <button type="submit" class="btn-main flex-1">Sign In</button>
         </div>
       </form>
-
-      <!-- Optional Secondary Persona Switcher for Class Walkthrough -->
-      <div class="mt-5 pt-4 border-t border-stone-300/80 flex items-center justify-between text-small">
-        <span>Demoing family cook persona?</span>
-        <button type="button" onclick="UI.triggerDorisDemoPrefill()" class="text-primary font-semibold underline">
-          Prefill Doris's Login
-        </button>
-      </div>
     </div>
   </div>
 
   <!-- =======================================================================
-       DELETE CONFIRMATION MODAL (PBI 10 & Epic "Keeping family recipes safe")
+       DELETE CONFIRMATION MODAL
        ======================================================================= -->
   <div id="delete-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-white rounded-2xl max-w-[380px] w-full p-6 shadow-xl border border-gray-200">
@@ -254,24 +226,6 @@
         <button id="btn-confirm-delete" class="btn-delete flex-1">
           Delete
         </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- =======================================================================
-       OPTIONAL 3NF SQLITE DATABASE MODAL
-       ======================================================================= -->
-  <div id="db-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[88vh] flex flex-col shadow-xl border border-gray-200 overflow-hidden">
-      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-cream">
-        <div>
-          <h3 class="text-heading">3NF SQLite Relational Database (7 Tables)</h3>
-          <p class="text-small">Total time is calculated dynamically as prep_time_min + cook_time_min to preserve 3NF.</p>
-        </div>
-        <button onclick="UI.closeDatabaseModal()" class="btn-icon !w-9 !h-9" title="Close">✕</button>
-      </div>
-      <div id="db-modal-body" class="p-6 overflow-y-auto space-y-6 flex-1">
-        <!-- Populated dynamically when opened -->
       </div>
     </div>
   </div>

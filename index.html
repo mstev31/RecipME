@@ -27,114 +27,195 @@
 <body class="min-h-screen flex flex-col bg-cream text-ink">
 
   <!-- =======================================================================
-       FULL-WIDTH WEB APPLICATION TOP NAVIGATION BAR
+       DEDICATED INITIAL LOGIN SCREEN (Shown first before entering RecipME)
        ======================================================================= -->
-  <header class="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-stone-300/80">
-    <div class="web-container px-4 sm:px-8 lg:px-12 py-3 sm:py-0 sm:h-20 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-      
-      <!-- Brand Logo & Tagline -->
-      <button onclick="UI.switchTab('recipes')" class="flex items-center gap-2.5 sm:gap-3 text-left focus:outline-none group shrink-0">
-        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-sm group-hover:opacity-95 transition">
+  <section id="login-screen" class="min-h-screen flex flex-col justify-between bg-cream px-4 py-8 sm:py-12">
+    <div class="web-container flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-xl shadow-sm">
           R
         </div>
         <div>
-          <span class="font-bold text-xl sm:text-2xl tracking-tight text-ink block leading-none">RecipME</span>
-          <span class="text-xs text-muted hidden md:block mt-1">Personal Recipe Notebook</span>
+          <span class="font-bold text-2xl tracking-tight text-ink block leading-none">RecipME</span>
+          <span class="text-xs text-muted block mt-1">Personal Recipe Notebook</span>
         </div>
+      </div>
+
+      <button type="button" onclick="UI.toggleLargeText()" 
+              class="px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-sm font-medium text-ink min-h-[42px] flex items-center gap-1.5 transition"
+              title="Make text larger for easier reading">
+        <span class="font-bold text-base">Aa</span>
+        <span class="hidden sm:inline">Larger text</span>
       </button>
+    </div>
 
-      <!-- Navigation Links + Larger Text Toggle + Auth Pill + Quick Action -->
-      <div class="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap justify-end">
-        <nav class="flex items-center gap-1 sm:gap-2">
-          <button id="nav-tab-recipes" onclick="UI.switchTab('recipes')" 
-                  class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
-            <span>Recipes</span>
+    <div class="my-auto py-8 flex items-center justify-center">
+      <div class="w-full max-w-[460px] space-y-6">
+        <div class="text-center space-y-2">
+          <h1 class="text-heading !text-3xl sm:!text-4xl">Welcome to RecipME</h1>
+          <p class="text-body text-muted">
+            Your personal family recipe notebook and cooking idea keeper.
+          </p>
+        </div>
+
+        <div class="bg-white/95 rounded-2xl p-6 sm:p-8 shadow-sm border border-stone-300/90 space-y-5">
+          <!-- Primary One-Click Demo Day Login Button -->
+          <button type="button" id="btn-landing-demo-login" onclick="UI.triggerDemoPrefill()" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
+            Demo Day Login
           </button>
-          <button id="nav-tab-ideas" onclick="UI.switchTab('ideas')" 
-                  class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
-            <span>Ideas</span>
-          </button>
-        </nav>
 
-        <div class="h-6 w-px bg-stone-300 hidden sm:block"></div>
+          <div class="relative flex py-1 items-center">
+            <div class="flex-grow border-t border-stone-300/80"></div>
+            <span class="shrink mx-3 text-small">or sign in with email</span>
+            <div class="flex-grow border-t border-stone-300/80"></div>
+          </div>
 
-        <!-- PBI 18: Larger Text Toggle for family cooks (Doris persona) -->
-        <button id="btn-large-text" onclick="UI.toggleLargeText()" 
-                class="px-2.5 sm:px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-1.5 transition"
-                title="Make text larger for easier reading while cooking">
-          <span class="font-bold text-sm sm:text-base">Aa</span>
-          <span id="large-text-label" class="hidden lg:inline">Larger text</span>
-        </button>
+          <!-- Credential Form (Prefilled automatically when Demo Day Login is clicked) -->
+          <form onsubmit="UI.handleCredentialLogin(event)" class="space-y-4">
+            <div>
+              <label for="landing-login-email" class="text-small block mb-1">Email</label>
+              <input type="email" id="landing-login-email" class="recipme-input" placeholder="demoday@recipme.app" required>
+            </div>
+            <div>
+              <label for="landing-login-password" class="text-small block mb-1">Password</label>
+              <input type="password" id="landing-login-password" class="recipme-input" placeholder="••••••••••••" required>
+            </div>
+            <div id="landing-login-status" class="text-small hidden"></div>
+            <button type="submit" class="btn-secondary w-full !min-h-[46px] font-semibold">
+              Sign In
+            </button>
+          </form>
 
-        <!-- Account / Demo Login Status Button -->
-        <div id="auth-header-slot"></div>
-
-        <button onclick="UI.startNewBlankRecipe()" class="btn-main !min-h-[40px] sm:!min-h-[42px] !py-1.5 sm:!py-2 !px-3.5 sm:!px-4 !text-sm sm:!text-base hidden sm:inline-flex">
-          + New recipe
-        </button>
+          <!-- Optional Secondary Persona Switcher -->
+          <div class="pt-4 border-t border-stone-300/80 flex items-center justify-between text-small">
+            <span>Demoing family cook persona?</span>
+            <button type="button" onclick="UI.triggerDorisDemoPrefill()" class="text-primary font-semibold underline">
+              Doris Thibodeaux Login
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </header>
 
-  <!-- PBI 20: Plain-language storage warning banner (hidden unless triggered) -->
-  <div id="storage-error-banner" class="hidden web-container mt-4 px-4 sm:px-8 lg:px-12">
-    <div class="p-4 rounded-xl bg-red-50 border border-danger text-danger text-body">
-      We could not save your last change because your device's storage is full. Please free up some space so your recipes stay safe.
+    <div class="text-center text-small">
+      RecipME Personal Recipe Notebook • Presentation Demo Build
     </div>
+  </section>
+
+  <!-- =======================================================================
+       AUTHENTICATED APPLICATION SHELL (Hidden until user logs in)
+       ======================================================================= -->
+  <div id="authenticated-app" class="hidden min-h-screen flex flex-col">
+
+    <!-- FULL-WIDTH WEB APPLICATION TOP NAVIGATION BAR -->
+    <header class="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-stone-300/80">
+      <div class="web-container px-4 sm:px-8 lg:px-12 py-3 sm:py-0 sm:h-20 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
+        
+        <!-- Brand Logo & Tagline -->
+        <button onclick="UI.switchTab('recipes')" class="flex items-center gap-2.5 sm:gap-3 text-left focus:outline-none group shrink-0">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-sm group-hover:opacity-95 transition">
+            R
+          </div>
+          <div>
+            <span class="font-bold text-xl sm:text-2xl tracking-tight text-ink block leading-none">RecipME</span>
+            <span class="text-xs text-muted hidden md:block mt-1">Personal Recipe Notebook</span>
+          </div>
+        </button>
+
+        <!-- Navigation Links + Larger Text Toggle + Auth Pill + Quick Action -->
+        <div class="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap justify-end">
+          <nav class="flex items-center gap-1 sm:gap-2">
+            <button id="nav-tab-recipes" onclick="UI.switchTab('recipes')" 
+                    class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
+              <span>Recipes</span>
+            </button>
+            <button id="nav-tab-ideas" onclick="UI.switchTab('ideas')" 
+                    class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
+              <span>Ideas</span>
+            </button>
+          </nav>
+
+          <div class="h-6 w-px bg-stone-300 hidden sm:block"></div>
+
+          <!-- PBI 18: Larger Text Toggle for family cooks (Doris persona) -->
+          <button id="btn-large-text" onclick="UI.toggleLargeText()" 
+                  class="px-2.5 sm:px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-1.5 transition"
+                  title="Make text larger for easier reading while cooking">
+            <span class="font-bold text-sm sm:text-base">Aa</span>
+            <span id="large-text-label" class="hidden lg:inline">Larger text</span>
+          </button>
+
+          <!-- Account / Demo Login Status Button -->
+          <div id="auth-header-slot"></div>
+
+          <button onclick="UI.startNewBlankRecipe()" class="btn-main !min-h-[40px] sm:!min-h-[42px] !py-1.5 sm:!py-2 !px-3.5 sm:!px-4 !text-sm sm:!text-base hidden sm:inline-flex">
+            + New recipe
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- PBI 20: Plain-language storage warning banner (hidden unless triggered) -->
+    <div id="storage-error-banner" class="hidden web-container mt-4 px-4 sm:px-8 lg:px-12">
+      <div class="p-4 rounded-xl bg-red-50 border border-danger text-danger text-body">
+        We could not save your last change because your device's storage is full. Please free up some space so your recipes stay safe.
+      </div>
+    </div>
+
+    <!-- MAIN FULL-SCREEN WEB WORKSPACE -->
+    <main id="app-workspace" class="flex-1 w-full web-container px-4 sm:px-8 lg:px-12 py-6 sm:py-10">
+      <!-- Dynamic Full-Width Desktop & Mobile Views Rendered Here -->
+    </main>
+
+    <!-- DISCRETE FULL-WIDTH FOOTER -->
+    <footer class="border-t border-stone-300/70 mt-16 py-8">
+      <div class="web-container px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-small">
+        <span>RecipME Personal Recipe Notebook</span>
+        <div class="flex flex-wrap items-center justify-center gap-4">
+          <button onclick="UI.openAuthModal()" class="underline hover:text-ink">
+            Switch Demo Account
+          </button>
+          <span>•</span>
+          <button onclick="UI.logoutToLoginScreen()" class="underline hover:text-ink">
+            Sign Out
+          </button>
+          <span>•</span>
+          <button onclick="UI.openDatabaseModal()" class="underline hover:text-ink">
+            View 3NF Database / Export SQL
+          </button>
+          <span>•</span>
+          <button onclick="UI.confirmResetDemoData()" class="underline hover:text-danger">
+            Reset Demo Data
+          </button>
+        </div>
+      </div>
+    </footer>
+
   </div>
 
   <!-- =======================================================================
-       MAIN FULL-SCREEN WEB WORKSPACE
-       ======================================================================= -->
-  <main id="app-workspace" class="flex-1 w-full web-container px-4 sm:px-8 lg:px-12 py-6 sm:py-10">
-    <!-- Dynamic Full-Width Desktop & Mobile Views Rendered Here -->
-  </main>
-
-  <!-- =======================================================================
-       DISCRETE FULL-WIDTH FOOTER
-       ======================================================================= -->
-  <footer class="border-t border-stone-300/70 mt-16 py-8">
-    <div class="web-container px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-small">
-      <span>RecipME Personal Recipe Notebook</span>
-      <div class="flex items-center gap-4">
-        <button onclick="UI.openAuthModal()" class="underline hover:text-ink">
-          Demo Log In / Switch Account
-        </button>
-        <span>•</span>
-        <button onclick="UI.openDatabaseModal()" class="underline hover:text-ink">
-          View 3NF Database / Export SQL
-        </button>
-        <span>•</span>
-        <button onclick="UI.confirmResetDemoData()" class="underline hover:text-danger">
-          Reset Demo Data
-        </button>
-      </div>
-    </div>
-  </footer>
-
-  <!-- =======================================================================
-       DEMO LOG IN MODAL (Prefills predetermined credentials for walkthroughs)
+       ACCOUNT SWITCHER MODAL (Accessible from header/footer once signed in)
        ======================================================================= -->
   <div id="auth-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
     <div class="bg-cream rounded-2xl max-w-[430px] w-full p-6 shadow-xl border border-stone-300">
       <div class="flex items-start justify-between gap-3 mb-2">
-        <h3 class="text-heading">Sign in to RecipME</h3>
+        <h3 class="text-heading">Demo Day Account</h3>
         <button type="button" onclick="UI.closeAuthModal()" class="btn-icon !w-9 !h-9" title="Close">✕</button>
       </div>
       <p class="text-small mb-5">
-        Use our one-click <strong>Demo Log In</strong> to prefill presentation credentials, or enter your account email and password below.
+        Use our one-click <strong>Demo Day Login</strong> to prefill presentation credentials, or return to the main login screen.
       </p>
 
-      <!-- One-Click Demo Log In Button -->
+      <!-- One-Click Demo Day Login Button -->
       <button type="button" id="btn-demo-prefill" onclick="UI.triggerDemoPrefill()" class="btn-main w-full mb-5">
-        Demo Log In
+        Demo Day Login
       </button>
 
-      <!-- Credential Form (Prefilled automatically when Demo Log In is clicked) -->
+      <!-- Credential Form (Prefilled automatically when Demo Day Login is clicked) -->
       <form onsubmit="UI.handleCredentialLogin(event)" class="space-y-4 pt-4 border-t border-stone-300/80">
         <div>
           <label for="login-email" class="text-small block mb-1">Email</label>
-          <input type="email" id="login-email" class="recipme-input" placeholder="jordan.demo@recipme.app" required>
+          <input type="email" id="login-email" class="recipme-input" placeholder="demoday@recipme.app" required>
         </div>
         <div>
           <label for="login-password" class="text-small block mb-1">Password</label>
@@ -142,7 +223,7 @@
         </div>
         <div id="login-status-msg" class="text-small hidden"></div>
         <div class="flex items-center gap-3 pt-1">
-          <button type="button" onclick="UI.closeAuthModal()" class="btn-secondary flex-1">Cancel</button>
+          <button type="button" onclick="UI.logoutToLoginScreen()" class="btn-secondary flex-1">Sign Out</button>
           <button type="submit" class="btn-main flex-1">Sign In</button>
         </div>
       </form>

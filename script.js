@@ -1,5 +1,5 @@
 /*************************************************************************
- * PREDETERMINED DEMO ACCOUNTS (For Cloudflare Pages / Live Presentation)
+ * PREDETERMINED DEMO ACCOUNT (For Live Presentation)
  *************************************************************************/
 const DEMO_ACCOUNTS = {
   demoDay: {
@@ -9,30 +9,11 @@ const DEMO_ACCOUNTS = {
     password: 'RecipME2026!',
     initials: 'DD',
     badgeColor: '#C2410C'
-  },
-  doris: {
-    id: 'demo_doris',
-    name: 'Doris Thibodeaux',
-    email: 'doris.demo@recipme.app',
-    password: 'RecipME2026!',
-    initials: 'DT',
-    badgeColor: '#3F7D3A'
   }
 };
 
 /*************************************************************************
  * LAYER 1: STORAGE SERVICE & LOCAL RELATIONAL DATABASE (3NF Schema)
- * Implements exact tables from Milestone Two v1 - PBI Schemas:
- * 1. idea (idea_id, idea_title, idea_note, created_at, updated_at)
- * 2. recipe (recipe_id, source_idea_id, recipe_title, description,
- *            prep_time_min, cook_time_min, servings, difficulty,
- *            personal_notes, photo_path, created_at, updated_at)
- *    *Note: Total time is NEVER stored in `recipe` to maintain 3NF!
- * 3. step (step_id, recipe_id, step_number, instruction)
- * 4. ingredient (ingredient_id, ingredient_name)
- * 5. recipe_ingredient (recipe_id, ingredient_id, quantity, unit, line_order)
- * 6. tag (tag_id, tag_name, is_preset)
- * 7. recipe_tag (recipe_id, tag_id)
  *************************************************************************/
 const StorageService = {
   SESSION_KEY: 'recipme_active_demo_user_v2',
@@ -40,454 +21,8 @@ const StorageService = {
   db: null,
 
   getStorageKey() {
-    const uid = this.currentUser ? this.currentUser.id : 'demo_day_user';
-    return `recipme_sqlite_db_${uid}_v1`;
-  },
-
-  // Default initial dataset matching Demo Day & Doris scenarios + Key Screen 2.4
-  getSeedDatabase(userId = 'demo_day_user') {
-    const now = new Date().toISOString();
-    const baseTags = [
-      { tag_id: 1, tag_name: "Chicken", is_preset: true },
-      { tag_id: 2, tag_name: "Weeknight", is_preset: true },
-      { tag_id: 3, tag_name: "Fish", is_preset: true },
-      { tag_id: 4, tag_name: "Gluten-Free", is_preset: true },
-      { tag_id: 5, tag_name: "Holiday", is_preset: true },
-      { tag_id: 6, tag_name: "Vegetarian", is_preset: true }
-    ];
-
-    if (userId === 'demo_doris') {
-      return {
-        idea: [
-          {
-            idea_id: 1,
-            idea_title: "Smoked turkey gumbo variation",
-            idea_note: "Try Kayla's idea: smoked turkey instead of sausage for next Thanksgiving.",
-            created_at: now,
-            updated_at: now
-          }
-        ],
-        recipe: [
-          {
-            recipe_id: 2,
-            source_idea_id: null,
-            recipe_title: "Mama's Chicken and Sausage Gumbo",
-            description: "The gumbo we make every Christmas Eve. Dark roux, takes patience.",
-            prep_time_min: 45,
-            cook_time_min: 135,
-            servings: 12,
-            difficulty: 4,
-            personal_notes: "Stir the whole time. Don't walk away.",
-            photo_path: "",
-            created_at: now,
-            updated_at: now
-          }
-        ],
-        step: [
-          { step_id: 1, recipe_id: 2, step_number: 1, instruction: "Make the roux with oil and flour, stirring until it is the color of chocolate." },
-          { step_id: 2, recipe_id: 2, step_number: 2, instruction: "Add chopped onions, bell pepper, and celery and stir until softened." },
-          { step_id: 3, recipe_id: 2, step_number: 3, instruction: "Simmer gently with stock, chicken, and sliced andouille sausage." }
-        ],
-        ingredient: [
-          { ingredient_id: 5, ingredient_name: "chicken" },
-          { ingredient_id: 6, ingredient_name: "andouille sausage" },
-          { ingredient_id: 7, ingredient_name: "vegetable oil" },
-          { ingredient_id: 8, ingredient_name: "all-purpose flour" },
-          { ingredient_id: 9, ingredient_name: "green onions" }
-        ],
-        recipe_ingredient: [
-          { recipe_id: 2, ingredient_id: 5, quantity: 2, unit: "lb", line_order: 1 },
-          { recipe_id: 2, ingredient_id: 6, quantity: 1, unit: "lb", line_order: 2 },
-          { recipe_id: 2, ingredient_id: 7, quantity: 1, unit: "cup", line_order: 3 },
-          { recipe_id: 2, ingredient_id: 8, quantity: 1, unit: "cup", line_order: 4 },
-          { recipe_id: 2, ingredient_id: 9, quantity: 1, unit: "bunch", line_order: 5 }
-        ],
-        tag: baseTags,
-        recipe_tag: [
-          { recipe_id: 2, tag_id: 1 },
-          { recipe_id: 2, tag_id: 5 }
-        ]
-      };
-    }
-
-    return {
-      idea: [
-        {
-          idea_id: 1,
-          idea_title: "Honey chipotle chicken",
-          idea_note: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.",
-          created_at: now,
-          updated_at: now
-        },
-        {
-          idea_id: 2,
-          idea_title: "Smoked turkey gumbo variation",
-          idea_note: "Try Kayla's idea: smoked turkey instead of sausage for next Thanksgiving.",
-          created_at: now,
-          updated_at: now
-        },
-        {
-          idea_id: 3,
-          idea_title: "Blackened catfish tacos with lime crema",
-          idea_note: "Quick weeknight fish tacos with shredded cabbage, lime juice, and garlic sour cream.",
-          created_at: now,
-          updated_at: now
-        }
-      ],
-      recipe: [
-        {
-          recipe_id: 1,
-          source_idea_id: 1,
-          recipe_title: "Honey chipotle chicken",
-          description: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.",
-          prep_time_min: 15,
-          cook_time_min: 20,
-          servings: 4,
-          difficulty: 2,
-          personal_notes: "Double the sauce next time.",
-          photo_path: "",
-          created_at: now,
-          updated_at: now
-        },
-        {
-          recipe_id: 2,
-          source_idea_id: null,
-          recipe_title: "Mama's Chicken and Sausage Gumbo",
-          description: "The gumbo we make every Christmas Eve. Dark roux, takes patience.",
-          prep_time_min: 45,
-          cook_time_min: 135,
-          servings: 12,
-          difficulty: 4,
-          personal_notes: "Stir the whole time. Don't walk away.",
-          photo_path: "",
-          created_at: now,
-          updated_at: now
-        }
-      ],
-      step: [
-        { step_id: 1, recipe_id: 1, step_number: 1, instruction: "Mix honey, chopped chipotle, lime juice, and garlic." },
-        { step_id: 2, recipe_id: 1, step_number: 2, instruction: "Marinate the chicken for 10 minutes." },
-        { step_id: 3, recipe_id: 2, step_number: 1, instruction: "Make the roux with oil and flour, stirring until it is the color of chocolate." },
-        { step_id: 4, recipe_id: 2, step_number: 2, instruction: "Add chopped onions, bell pepper, and celery and stir until softened." },
-        { step_id: 5, recipe_id: 2, step_number: 3, instruction: "Simmer gently with stock, chicken, and sliced andouille sausage." }
-      ],
-      ingredient: [
-        { ingredient_id: 1, ingredient_name: "chicken thighs" },
-        { ingredient_id: 2, ingredient_name: "honey" },
-        { ingredient_id: 3, ingredient_name: "chipotle peppers in adobo" },
-        { ingredient_id: 4, ingredient_name: "limes" },
-        { ingredient_id: 5, ingredient_name: "chicken" },
-        { ingredient_id: 6, ingredient_name: "andouille sausage" },
-        { ingredient_id: 7, ingredient_name: "vegetable oil" },
-        { ingredient_id: 8, ingredient_name: "all-purpose flour" },
-        { ingredient_id: 9, ingredient_name: "green onions" }
-      ],
-      recipe_ingredient: [
-        { recipe_id: 1, ingredient_id: 1, quantity: 2, unit: "lb", line_order: 1 },
-        { recipe_id: 1, ingredient_id: 2, quantity: 3, unit: "tbsp", line_order: 2 },
-        { recipe_id: 1, ingredient_id: 3, quantity: 2, unit: "", line_order: 3 },
-        { recipe_id: 1, ingredient_id: 4, quantity: 2, unit: "", line_order: 4 },
-        { recipe_id: 2, ingredient_id: 5, quantity: 2, unit: "lb", line_order: 1 },
-        { recipe_id: 2, ingredient_id: 6, quantity: 1, unit: "lb", line_order: 2 },
-        { recipe_id: 2, ingredient_id: 7, quantity: 1, unit: "cup", line_order: 3 },
-        { recipe_id: 2, ingredient_id: 8, quantity: 1, unit: "cup", line_order: 4 },
-        { recipe_id: 2, ingredient_id: 9, quantity: 1, unit: "bunch", line_order: 5 }
-      ],
-      tag: baseTags,
-      recipe_tag: [
-        { recipe_id: 1, tag_id: 1 }, // Chicken
-        { recipe_id: 1, tag_id: 2 }, // Weeknight
-        { recipe_id: 1, tag_id: 4 }, // Gluten-Free
-        { recipe_id: 2, tag_id: 1 }, // Chicken
-        { recipe_id: 2, tag_id: 5 }  // Holiday
-      ]
-    };
-  },
-
-  init() {
-    try {
-      const savedSession = localStorage.getItem(this.SESSION_KEY);
-      if (savedSession) {
-        this.currentUser = JSON.parse(savedSession);
-        this.loadActiveUserDatabase();
-      } else {
-        // Start unauthenticated so the Login Screen is the very first screen users see
-        this.currentUser = null;
-        this.db = this.getSeedDatabase(DEMO_ACCOUNTS.demoDay.id);
-      }
-    } catch (err) {
-      console.error("Database initialization fallback:", err);
-      this.currentUser = null;
-      this.db = this.getSeedDatabase(DEMO_ACCOUNTS.demoDay.id);
-    }
-  },
-
-  loadActiveUserDatabase() {
     const uid = this.currentUser ? this.currentUser.id : DEMO_ACCOUNTS.demoDay.id;
-    try {
-      const saved = localStorage.getItem(this.getStorageKey());
-      if (saved) {
-        this.db = JSON.parse(saved);
-      } else {
-        this.db = this.getSeedDatabase(uid);
-        this.commit();
-      }
-    } catch (err) {
-      this.db = this.getSeedDatabase(uid);
-    }
-  },
-
-  setActiveUser(userObj) {
-    this.currentUser = userObj;
-    if (userObj) {
-      localStorage.setItem(this.SESSION_KEY, JSON.stringify(userObj));
-      this.loadActiveUserDatabase();
-    } else {
-      localStorage.removeItem(this.SESSION_KEY);
-    }
-  },
-
-  clearSession() {
-    this.currentUser = null;
-    localStorage.removeItem(this.SESSION_KEY);
-  },
-
-  // Autosaves every change to localStorage and triggers UI indicator
-  commit() {
-    try {
-      localStorage.setItem(this.getStorageKey(), JSON.stringify(this.db));
-      document.getElementById('storage-error-banner')?.classList.add('hidden');
-      UI.notifyAutosave();
-      UI.updateNavBadges();
-    } catch (err) {
-      // PBI 20: Plain-language message if save fails or device is out of space
-      document.getElementById('storage-error-banner')?.classList.remove('hidden');
-    }
-  },
-
-  resetToSeed() {
-    const uid = this.currentUser ? this.currentUser.id : DEMO_ACCOUNTS.demoDay.id;
-    this.db = this.getSeedDatabase(uid);
-    this.commit();
-  },
-
-  nextId(tableName, pkField) {
-    const rows = this.db[tableName] || [];
-    if (rows.length === 0) return 1;
-    return Math.max(...rows.map(r => Number(r[pkField]) || 0)) + 1;
-  },
-
-  // Generates a complete 3NF SQLite DDL + INSERT script for export
-  generateSQLiteDump() {
-    const escSql = (val) => {
-      if (val === null || val === undefined) return 'NULL';
-      if (typeof val === 'number') return String(val);
-      if (typeof val === 'boolean') return val ? '1' : '0';
-      return `'${String(val).replace(/'/g, "''")}'`;
-    };
-
-    const lines = [
-      '-- RecipME 3NF SQLite Relational Schema & Data Export',
-      'PRAGMA foreign_keys = ON;',
-      '',
-      'CREATE TABLE IF NOT EXISTS idea (',
-      '  idea_id INTEGER PRIMARY KEY,',
-      '  idea_title TEXT NOT NULL,',
-      '  idea_note TEXT,',
-      '  created_at DATETIME NOT NULL,',
-      '  updated_at DATETIME NOT NULL',
-      ');',
-      '',
-      'CREATE TABLE IF NOT EXISTS recipe (',
-      '  recipe_id INTEGER PRIMARY KEY,',
-      '  source_idea_id INTEGER REFERENCES idea(idea_id),',
-      '  recipe_title TEXT NOT NULL,',
-      '  description TEXT,',
-      '  prep_time_min INTEGER,',
-      '  cook_time_min INTEGER,',
-      '  servings INTEGER,',
-      '  difficulty INTEGER,',
-      '  personal_notes TEXT,',
-      '  photo_path TEXT,',
-      '  created_at DATETIME NOT NULL,',
-      '  updated_at DATETIME NOT NULL',
-      ');',
-      '',
-      'CREATE TABLE IF NOT EXISTS step (',
-      '  step_id INTEGER PRIMARY KEY,',
-      '  recipe_id INTEGER NOT NULL REFERENCES recipe(recipe_id) ON DELETE CASCADE,',
-      '  step_number INTEGER NOT NULL,',
-      '  instruction TEXT NOT NULL',
-      ');',
-      '',
-      'CREATE TABLE IF NOT EXISTS ingredient (',
-      '  ingredient_id INTEGER PRIMARY KEY,',
-      '  ingredient_name TEXT NOT NULL UNIQUE',
-      ');',
-      '',
-      'CREATE TABLE IF NOT EXISTS recipe_ingredient (',
-      '  recipe_id INTEGER NOT NULL REFERENCES recipe(recipe_id) ON DELETE CASCADE,',
-      '  ingredient_id INTEGER NOT NULL REFERENCES ingredient(ingredient_id),',
-      '  quantity DECIMAL,',
-      '  unit TEXT,',
-      '  line_order INTEGER NOT NULL,',
-      '  PRIMARY KEY (recipe_id, ingredient_id)',
-      ');',
-      '',
-      'CREATE TABLE IF NOT EXISTS tag (',
-      '  tag_id INTEGER PRIMARY KEY,',
-      '  tag_name TEXT NOT NULL UNIQUE,',
-      '  is_preset BOOLEAN NOT NULL',
-      ');',
-      '',
-      'CREATE TABLE IF NOT EXISTS recipe_tag (',
-      '  recipe_id INTEGER NOT NULL REFERENCES recipe(recipe_id) ON DELETE CASCADE,',
-      '  tag_id INTEGER NOT NULL REFERENCES tag(tag_id),',
-      '  PRIMARY KEY (recipe_id, tag_id)',
-      ');',
-      ''
-    ];
-
-    ['idea', 'recipe', 'step', 'ingredient', 'recipe_ingredient', 'tag', 'recipe_tag'].forEach(table => {
-      const rows = this.db[table] || [];
-      rows.forEach(row => {
-        const cols = Object.keys(row).join(', ');
-        const vals = Object.values(row).map(escSql).join(', ');
-        lines.push(`INSERT INTO ${table} (${cols}) VALUES (${vals});`);
-      });
-    });
-
-    return lines.join('\n');
-  }
-};
-
-/*************************************************************************
- * LAYER 2: APPLICATION LOGIC LAYER
- * - IdeasManager: Save an idea, Turn idea into recipe
- * - RecipeManager: Recipe editor, Total-time calculation, Delete w/ confirm
- * - SearchAndFilter: Keyword & ingredient search, Tag filter
- *************************************************************************/
-const IdeasManager = {
-  getAllIdeas() {
-    return [...StorageService.db.idea].sort(
-      (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
-    );
-  },
-
-  getIdeaById(ideaId) {
-    return StorageService.db.idea.find(i => i.idea_id === Number(ideaId)) || null;
-  },
-
-  // PBI 04: Save a cooking idea in a few seconds
-  createIdea(rawText, explicitTitle = "") {
-    const trimmed = (rawText || "").trim();
-    const titleTrimmed = (explicitTitle || "").trim();
-    if (!trimmed && !titleTrimmed) return null;
-
-    let ideaTitle = titleTrimmed;
-    let ideaNote = trimmed;
-
-    if (!ideaTitle) {
-      const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
-      ideaTitle = lines[0];
-      if (lines.length === 1) {
-        const dotIndex = trimmed.indexOf('.');
-        if (dotIndex > 0 && dotIndex < 55) {
-          ideaTitle = trimmed.slice(0, dotIndex).trim();
-        }
-      } else {
-        ideaNote = lines.slice(1).join('\n');
-      }
-    }
-
-    const now = new Date().toISOString();
-    const newIdea = {
-      idea_id: StorageService.nextId('idea', 'idea_id'),
-      idea_title: ideaTitle,
-      idea_note: ideaNote || ideaTitle,
-      created_at: now,
-      updated_at: now
-    };
-
-    StorageService.db.idea.push(newIdea);
-    StorageService.commit();
-    return newIdea;
-  },
-
-  updateIdea(ideaId, fields) {
-    const idea = this.getIdeaById(ideaId);
-    if (!idea) return;
-    if (fields.idea_title !== undefined) idea.idea_title = fields.idea_title;
-    if (fields.idea_note !== undefined) idea.idea_note = fields.idea_note;
-    idea.updated_at = new Date().toISOString();
-    StorageService.commit();
-  },
-
-  deleteIdea(ideaId) {
-    const id = Number(ideaId);
-    StorageService.db.idea = StorageService.db.idea.filter(i => i.idea_id !== id);
-    StorageService.db.recipe.forEach(r => {
-      if (r.source_idea_id === id) r.source_idea_id = null;
-    });
-    StorageService.commit();
-  },
-
-  // PBI 05: Turn a saved idea into a recipe with title and note filled in
-  turnIdeaIntoRecipe(ideaId) {
-    const idea = this.getIdeaById(ideaId);
-    if (!idea) return null;
-
-    const now = new Date().toISOString();
-    const newRecipe = {
-      recipe_id: StorageService.nextId('recipe', 'recipe_id'),
-      source_idea_id: idea.idea_id,
-      recipe_title: idea.idea_title,
-      description: idea.idea_note || idea.idea_title,
-      prep_time_min: null,
-      cook_time_min: null,
-      servings: null,
-      difficulty: null,
-      personal_notes: "",
-      photo_path: "",
-      created_at: now,
-      updated_at: now
-    };
-
-    StorageService.db.recipe.push(newRecipe);
-    StorageService.commit();
-    return newRecipe;
-  }
-};
-
-const RecipeManager = {
-  // PBI 06 & 3NF Rule: Total time is NEVER stored in the database; always calculated dynamically
-  calculateTotalTime(prepMin, cookMin) {
-    const p = parseInt(prepMin, 10) || 0;
-    const c = parseInt(cookMin, 10) || 0;
-    return p + c;
-  },
-
-  formatIngredientLine(riRow, ingRow) {
-    const parts = [];
-    if (riRow.quantity !== null && riRow.quantity !== "" && riRow.quantity !== undefined) {
-      parts.push(riRow.quantity);
-    }
-    if (riRow.unit) {
-      parts.push(riRow.unit);
-    }
-    if (ingRow && ingRow.ingredient_name) {
-      parts.push(ingRow.ingredient_name);
-    }
-    return parts.join(" ").trim();
-  },
-
-  parseIngredientString(rawLine) {
-    const clean = (rawLine || "").trim();
-    if (!clean) return null;
-
-    const knownUnits = [
-      'lb', 'lbs', 'pound', 'pounds', 'oz', 'ounce', 'ounces',
-      'tbsp', 'tablespoon', 'tablespoons', 'tsp', 'teaspoon', 'teaspoons',
+    return `recipme_sqlite_db_${uid}_v1`; },  getSeedDatabase() { const now = new Date().toISOString(); const baseTags = [ { tag_id: 1, tag_name: "Chicken", is_preset: true }, { tag_id: 2, tag_name: "Weeknight", is_preset: true }, { tag_id: 3, tag_name: "Fish", is_preset: true }, { tag_id: 4, tag_name: "Gluten-Free", is_preset: true }, { tag_id: 5, tag_name: "Holiday", is_preset: true }, { tag_id: 6, tag_name: "Vegetarian", is_preset: true } ];  return { idea: [ { idea_id: 1, idea_title: "Honey chipotle chicken", idea_note: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.", created_at: now, updated_at: now }, { idea_id: 2, idea_title: "Smoked turkey gumbo variation", idea_note: "Try Kayla's idea: smoked turkey instead of sausage for next Thanksgiving.", created_at: now, updated_at: now }, { idea_id: 3, idea_title: "Blackened catfish tacos with lime crema", idea_note: "Quick weeknight fish tacos with shredded cabbage, lime juice, and garlic sour cream.", created_at: now, updated_at: now } ], recipe: [ { recipe_id: 1, source_idea_id: 1, recipe_title: "Honey chipotle chicken", description: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.", prep_time_min: 15, cook_time_min: 20, servings: 4, difficulty: 2, personal_notes: "Double the sauce next time.", photo_path: "", created_at: now, updated_at: now }, { recipe_id: 2, source_idea_id: null, recipe_title: "Mama's Chicken and Sausage Gumbo", description: "The gumbo we make every Christmas Eve. Dark roux, takes patience.", prep_time_min: 45, cook_time_min: 135, servings: 12, difficulty: 4, personal_notes: "Stir the whole time. Don't walk away.", photo_path: "", created_at: now, updated_at: now } ], step: [ { step_id: 1, recipe_id: 1, step_number: 1, instruction: "Mix honey, chopped chipotle, lime juice, and garlic." }, { step_id: 2, recipe_id: 1, step_number: 2, instruction: "Marinate the chicken for 10 minutes." }, { step_id: 3, recipe_id: 2, step_number: 1, instruction: "Make the roux with oil and flour, stirring until it is the color of chocolate." }, { step_id: 4, recipe_id: 2, step_number: 2, instruction: "Add chopped onions, bell pepper, and celery and stir until softened." }, { step_id: 5, recipe_id: 2, step_number: 3, instruction: "Simmer gently with stock, chicken, and sliced andouille sausage." } ], ingredient: [ { ingredient_id: 1, ingredient_name: "chicken thighs" }, { ingredient_id: 2, ingredient_name: "honey" }, { ingredient_id: 3, ingredient_name: "chipotle peppers in adobo" }, { ingredient_id: 4, ingredient_name: "limes" }, { ingredient_id: 5, ingredient_name: "chicken" }, { ingredient_id: 6, ingredient_name: "andouille sausage" }, { ingredient_id: 7, ingredient_name: "vegetable oil" }, { ingredient_id: 8, ingredient_name: "all-purpose flour" }, { ingredient_id: 9, ingredient_name: "green onions" } ], recipe_ingredient: [ { recipe_id: 1, ingredient_id: 1, quantity: 2, unit: "lb", line_order: 1 }, { recipe_id: 1, ingredient_id: 2, quantity: 3, unit: "tbsp", line_order: 2 }, { recipe_id: 1, ingredient_id: 3, quantity: 2, unit: "", line_order: 3 }, { recipe_id: 1, ingredient_id: 4, quantity: 2, unit: "", line_order: 4 }, { recipe_id: 2, ingredient_id: 5, quantity: 2, unit: "lb", line_order: 1 }, { recipe_id: 2, ingredient_id: 6, quantity: 1, unit: "lb", line_order: 2 }, { recipe_id: 2, ingredient_id: 7, quantity: 1, unit: "cup", line_order: 3 }, { recipe_id: 2, ingredient_id: 8, quantity: 1, unit: "cup", line_order: 4 }, { recipe_id: 2, ingredient_id: 9, quantity: 1, unit: "bunch", line_order: 5 } ], tag: baseTags, recipe_tag: [ { recipe_id: 1, tag_id: 1 }, // Chicken { recipe_id: 1, tag_id: 2 }, // Weeknight { recipe_id: 1, tag_id: 4 }, // Gluten-Free { recipe_id: 2, tag_id: 1 }, // Chicken { recipe_id: 2, tag_id: 5 }  // Holiday ] }; },  init() { try { const savedSession = localStorage.getItem(this.SESSION_KEY); if (savedSession) { this.currentUser = JSON.parse(savedSession); this.loadActiveUserDatabase(); } else { // Start unauthenticated so the Login Screen is the very first screen users see this.currentUser = null; this.db = this.getSeedDatabase(); } } catch (err) { console.error("Database initialization fallback:", err); this.currentUser = null; this.db = this.getSeedDatabase(); } },  loadActiveUserDatabase() { try { const saved = localStorage.getItem(this.getStorageKey()); if (saved) { this.db = JSON.parse(saved); } else { this.db = this.getSeedDatabase(); this.commit(); } } catch (err) { this.db = this.getSeedDatabase(); } },  setActiveUser(userObj) { this.currentUser = userObj; if (userObj) { localStorage.setItem(this.SESSION_KEY, JSON.stringify(userObj)); this.loadActiveUserDatabase(); } else { localStorage.removeItem(this.SESSION_KEY); } },  clearSession() { this.currentUser = null; localStorage.removeItem(this.SESSION_KEY); },  commit() { try { localStorage.setItem(this.getStorageKey(), JSON.stringify(this.db)); document.getElementById('storage-error-banner')?.classList.add('hidden'); UI.notifyAutosave(); UI.updateNavBadges(); } catch (err) { document.getElementById('storage-error-banner')?.classList.remove('hidden'); } },  nextId(tableName, pkField) { const rows = this.db[tableName] \vert{}\vert{} []; if (rows.length === 0) return 1; return Math.max(...rows.map(r => Number(r[pkField]) \vert{}\vert{} 0)) + 1; } };  /************************************************************************* * LAYER 2: APPLICATION LOGIC LAYER *************************************************************************/ const IdeasManager = { getAllIdeas() { return [...StorageService.db.idea].sort( (a, b) => new Date(b.updated_at) - new Date(a.updated_at) ); },  getIdeaById(ideaId) { return StorageService.db.idea.find(i => i.idea_id === Number(ideaId)) \vert{}\vert{} null; },  createIdea(rawText, explicitTitle = "") { const trimmed = (rawText \vert{}\vert{} "").trim(); const titleTrimmed = (explicitTitle \vert{}\vert{} "").trim(); if (!trimmed && !titleTrimmed) return null;  let ideaTitle = titleTrimmed; let ideaNote = trimmed;  if (!ideaTitle) { const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean); ideaTitle = lines[0]; if (lines.length === 1) { const dotIndex = trimmed.indexOf('.'); if (dotIndex > 0 && dotIndex < 55) { ideaTitle = trimmed.slice(0, dotIndex).trim(); } } else { ideaNote = lines.slice(1).join('\n'); } }  const now = new Date().toISOString(); const newIdea = { idea_id: StorageService.nextId('idea', 'idea_id'), idea_title: ideaTitle, idea_note: ideaNote \vert{}\vert{} ideaTitle, created_at: now, updated_at: now };  StorageService.db.idea.push(newIdea); StorageService.commit(); return newIdea; },  updateIdea(ideaId, fields) { const idea = this.getIdeaById(ideaId); if (!idea) return; if (fields.idea_title !== undefined) idea.idea_title = fields.idea_title; if (fields.idea_note !== undefined) idea.idea_note = fields.idea_note; idea.updated_at = new Date().toISOString(); StorageService.commit(); },  deleteIdea(ideaId) { const id = Number(ideaId); StorageService.db.idea = StorageService.db.idea.filter(i => i.idea_id !== id); StorageService.db.recipe.forEach(r => { if (r.source_idea_id === id) r.source_idea_id = null; }); StorageService.commit(); },  turnIdeaIntoRecipe(ideaId) { const idea = this.getIdeaById(ideaId); if (!idea) return null;  const now = new Date().toISOString(); const newRecipe = { recipe_id: StorageService.nextId('recipe', 'recipe_id'), source_idea_id: idea.idea_id, recipe_title: idea.idea_title, description: idea.idea_note \vert{}\vert{} idea.idea_title, prep_time_min: null, cook_time_min: null, servings: null, difficulty: null, personal_notes: "", photo_path: "", created_at: now, updated_at: now };  StorageService.db.recipe.push(newRecipe); StorageService.commit(); return newRecipe; } };  const RecipeManager = { calculateTotalTime(prepMin, cookMin) { const p = parseInt(prepMin, 10) \vert{}\vert{} 0; const c = parseInt(cookMin, 10) \vert{}\vert{} 0; return p + c; },  formatIngredientLine(riRow, ingRow) { const parts = []; if (riRow.quantity !== null && riRow.quantity !== "" && riRow.quantity !== undefined) { parts.push(riRow.quantity); } if (riRow.unit) { parts.push(riRow.unit); } if (ingRow && ingRow.ingredient_name) { parts.push(ingRow.ingredient_name); } return parts.join(" ").trim(); },  parseIngredientString(rawLine) { const clean = (rawLine \vert{}\vert{} "").trim(); if (!clean) return null;  const knownUnits = [ 'lb', 'lbs', 'pound', 'pounds', 'oz', 'ounce', 'ounces', 'tbsp', 'tablespoon', 'tablespoons', 'tsp', 'teaspoon', 'teaspoons',
       'cup', 'cups', 'clove', 'cloves', 'bunch', 'bunches', 'can', 'cans',
       'pinch', 'dash', 'g', 'kg', 'ml', 'l', 'slice', 'slices', 'piece', 'pieces'
     ];
@@ -633,7 +168,6 @@ const RecipeManager = {
     return copy;
   },
 
-  // PBI 09: Autosave every field change immediately
   updateRecipeField(recipeId, fieldName, value) {
     const r = StorageService.db.recipe.find(item => item.recipe_id === Number(recipeId));
     if (!r) return;
@@ -900,7 +434,7 @@ const UI = {
   },
 
   /* =====================================================================
-   * DEMO DAY LOG IN & ACCOUNT SWITCHER HANDLERS
+   * DEMO DAY LOG IN HANDLERS
    * ===================================================================== */
   renderAuthHeader() {
     const slot = document.getElementById('auth-header-slot');
@@ -919,7 +453,7 @@ const UI = {
     slot.innerHTML = `
       <button type="button" onclick="UI.openAuthModal()"
               class="px-3 py-1.5 rounded-full border border-stone-300 bg-white/90 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-2 transition"
-              title="Signed in as ${this.esc(user.name)} (${this.esc(user.email)}). Click to switch or sign out.">
+              title="Signed in as ${this.esc(user.name)} (${this.esc(user.email)}).">
         <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0"
               style="background-color: ${user.badgeColor || '#C2410C'}">
           ${this.esc(user.initials)}
@@ -965,13 +499,7 @@ const UI = {
     this.runPrefillSequence(DEMO_ACCOUNTS.demoDay);
   },
 
-  // Prefills Doris's predetermined demo credentials for family-cook walkthrough
-  triggerDorisDemoPrefill() {
-    this.runPrefillSequence(DEMO_ACCOUNTS.doris);
-  },
-
   runPrefillSequence(account) {
-    // Populate both landing login inputs and modal inputs so whichever is visible updates
     ['landing-login-email', 'login-email'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = account.email;
@@ -989,7 +517,6 @@ const UI = {
       }
     });
 
-    // Brief 500ms pause so live presentation viewers see the fields prefill
     setTimeout(() => {
       this.completeDemoSignIn(account);
     }, 500);
@@ -1005,10 +532,6 @@ const UI = {
 
     if (email === DEMO_ACCOUNTS.demoDay.email && pass === DEMO_ACCOUNTS.demoDay.password) {
       this.completeDemoSignIn(DEMO_ACCOUNTS.demoDay);
-      return;
-    }
-    if (email === DEMO_ACCOUNTS.doris.email && pass === DEMO_ACCOUNTS.doris.password) {
-      this.completeDemoSignIn(DEMO_ACCOUNTS.doris);
       return;
     }
 
@@ -1227,8 +750,7 @@ const UI = {
 
                 <div class="mt-5 pt-3 border-t border-stone-300/60 space-y-3">
                   <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
-                    <span>Total: <strong class="text-ink">${r.total_time_min || 0} min</strong></span>
-                    ${r.servings ? `<span>• Servings: <strong class="text-ink">${r.servings}</strong></span>` : ''}
+                    <span>Total: <strong class="text-ink">${r.total_time_min \vert{}\vert{} 0} min</strong></span>${r.servings ? `<span>• Servings: <strong class="text-ink">${r.servings}</strong></span>` : ''}
                     ${r.difficulty ? `<span>• Difficulty: <strong class="text-ink">${r.difficulty}/5</strong></span>` : ''}
                   </div>
 
@@ -1415,100 +937,6 @@ const UI = {
   },
 
   /* =====================================================================
-   * 3NF DATABASE & SQLITE MODAL
-   * ===================================================================== */
-  openDatabaseModal() {
-    const modal = document.getElementById('db-modal');
-    const body = document.getElementById('db-modal-body');
-    if (!modal || !body) return;
-    body.innerHTML = this.buildDatabaseInspectorHTML();
-    modal.classList.remove('hidden');
-  },
-
-  closeDatabaseModal() {
-    document.getElementById('db-modal')?.classList.add('hidden');
-  },
-
-  buildDatabaseInspectorHTML() {
-    const tables = [
-      { name: 'idea', pk: 'PK: idea_id', desc: 'Quick cooking ideas saved in the Ideas list before they become recipes.' },
-      { name: 'recipe', pk: 'PK: recipe_id | FK: source_idea_id', desc: 'Finished recipes in the notebook. Total time is NOT stored (calculated dynamically as prep_time_min + cook_time_min for 3NF).' },
-      { name: 'step', pk: 'PK: step_id | FK: recipe_id', desc: 'Numbered "How to Make It" instructions; step_number updates on drag reorder.' },
-      { name: 'ingredient', pk: 'PK: ingredient_id', desc: 'Unique ingredient names stored once so recipes can be searched by ingredient.' },
-      { name: 'recipe_ingredient', pk: 'PK, FK: (recipe_id, ingredient_id)', desc: 'Junction table linking recipes and ingredients with quantity, unit, and line_order.' },
-      { name: 'tag', pk: 'PK: tag_id', desc: 'Labels used to group and filter recipes (is_preset = true for built-in tags).' },
-      { name: 'recipe_tag', pk: 'PK, FK: (recipe_id, tag_id)', desc: 'Junction table linking recipes and tags (many-to-many).' }
-    ];
-
-    const sqlDump = StorageService.generateSQLiteDump();
-
-    return `
-      <div class="space-y-6">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <span class="text-small">Live local SQLite state across all 7 normalized tables:</span>
-          <div class="flex flex-wrap items-center gap-2.5">
-            <button onclick="UI.downloadSQLiteFile()" class="btn-main !min-h-[40px] !py-1.5 !px-4 !text-sm">
-              ⬇ Download schema.sql
-            </button>
-            <button onclick="UI.copySQLiteToClipboard()" class="btn-secondary !min-h-[40px] !py-1.5 !px-4 !text-sm">
-              <span id="copy-sql-label">Copy SQL Script</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          ${tables.map(t => {
-            const rows = StorageService.db[t.name] || [];
-            return `
-              <div class="bg-cream/50 rounded-xl border border-gray-200 p-4 flex flex-col">
-                <div class="flex items-center justify-between gap-2 pb-1.5 border-b border-gray-200">
-                  <span class="font-bold text-body text-ink">Table: <code class="text-primary">${t.name}</code> (${rows.length})</span>
-                  <span class="text-xs font-mono text-muted">${t.pk}</span>
-                </div>
-                <p class="text-small my-2">${t.desc}</p>
-                <pre class="bg-white rounded-lg p-3 border border-gray-200 overflow-x-auto text-xs font-mono text-gray-800 max-h-44 leading-relaxed">${this.esc(JSON.stringify(rows, null, 2))}</pre>
-              </div>
-            `;
-          }).join('')}
-        </div>
-
-        <div>
-          <div class="flex items-center justify-between mb-2">
-            <h4 class="font-semibold text-body">Generated SQLite DDL & INSERT Script (<code>recipme_3nf_schema.sql</code>)</h4>
-          </div>
-          <textarea id="sqlite-dump-textarea" readonly rows="10" 
-                    class="w-full font-mono text-xs bg-gray-900 text-green-400 p-4 rounded-xl border border-gray-700 focus:outline-none">${this.esc(sqlDump)}</textarea>
-        </div>
-      </div>
-    `;
-  },
-
-  downloadSQLiteFile() {
-    const sqlDump = StorageService.generateSQLiteDump();
-    const blob = new Blob([sqlDump], { type: 'application/sql' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'recipme_3nf_schema.sql';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  },
-
-  copySQLiteToClipboard() {
-    const textarea = document.getElementById('sqlite-dump-textarea');
-    if (!textarea) return;
-    textarea.select();
-    document.execCommand('copy');
-    const label = document.getElementById('copy-sql-label');
-    if (label) {
-      label.textContent = '✓ Copied SQL!';
-      setTimeout(() => { label.textContent = 'Copy SQL Script'; }, 2000);
-    }
-  },
-
-  /* =====================================================================
    * VIEW 3: FULL-WIDTH DESKTOP RECIPE EDITOR
    * ===================================================================== */
   buildRecipeEditorCardHTML(recipeId) {
@@ -1576,8 +1004,7 @@ const UI = {
                 <textarea id="field-recipe-desc" rows="3" 
                           class="recipme-input"
                           placeholder="Short description or notes..."
-                          oninput="RecipeManager.updateRecipeField(${recipe.recipe_id}, 'description', this.value)">${this.esc(recipe.description)}</textarea>
-                ${recipe.source_idea_id ? `
+                          oninput="RecipeManager.updateRecipeField(${recipe.recipe_id}, 'description', this.value)">${this.esc(recipe.description)}</textarea>${recipe.source_idea_id ? `
                   <p class="text-small mt-1">Copied from your idea</p>
                 ` : ''}
               </div>
@@ -1722,7 +1149,7 @@ const UI = {
                     <li class="py-3 flex items-center justify-between gap-3">
                       <span class="text-body flex-1 min-w-0">${this.esc(ing.formatted)}</span>
                       <button type="button"
-                              onclick="UI.handleRemoveIngredient(${recipe.recipe_id}, ${ing.ingredient_id})"
+                              onclick="UI.handleRemoveIngredient(${recipe.recipe_id},${ing.ingredient_id})"
                               class="w-10 h-10 shrink-0 rounded-lg text-muted hover:text-danger hover:bg-stone-200/60 flex items-center justify-center text-xl"
                               title="Remove ingredient">
                         ×
@@ -1820,104 +1247,7 @@ const UI = {
     const r = RecipeManager.getHydratedRecipe(recipeId);
     const totalEl = document.getElementById('total-time-display');
     if (totalEl && r) {
-      totalEl.textContent = `Total time: ${r.total_time_min} min`;
-    }
-  },
-
-  handleDifficultySelect(recipeId, rating) {
-    const r = StorageService.db.recipe.find(item => item.recipe_id === Number(recipeId));
-    const nextVal = r && r.difficulty === rating ? null : rating;
-    RecipeManager.updateRecipeField(recipeId, 'difficulty', nextVal);
-    this.render();
-  },
-
-  handleToggleRecipeTag(recipeId, tagId) {
-    RecipeManager.toggleRecipeTag(recipeId, tagId);
-    this.render();
-  },
-
-  showNewTagInput() {
-    const form = document.getElementById('new-tag-form');
-    const input = document.getElementById('new-tag-input');
-    if (form) {
-      form.classList.toggle('hidden');
-      if (!form.classList.contains('hidden') && input) input.focus();
-    }
-  },
-
-  handleCreateNewTag(recipeId) {
-    const input = document.getElementById('new-tag-input');
-    if (!input || !input.value.trim()) return;
-    RecipeManager.addCustomTag(input.value.trim(), recipeId);
-    this.render();
-  },
-
-  handleAddIngredient(recipeId) {
-    const input = document.getElementById('add-ingredient-input');
-    if (!input || !input.value.trim()) return;
-    RecipeManager.addIngredientToRecipe(recipeId, input.value);
-    this.render();
-    const refreshedInput = document.getElementById('add-ingredient-input');
-    if (refreshedInput) refreshedInput.focus();
-  },
-
-  handleRemoveIngredient(recipeId, ingredientId) {
-    RecipeManager.removeIngredientFromRecipe(recipeId, ingredientId);
-    this.render();
-  },
-
-  handleAddStep(recipeId) {
-    const input = document.getElementById('add-step-input');
-    if (!input || !input.value.trim()) return;
-    RecipeManager.addStepToRecipe(recipeId, input.value);
-    this.render();
-    const refreshedInput = document.getElementById('add-step-input');
-    if (refreshedInput) refreshedInput.focus();
-  },
-
-  handleRemoveStep(recipeId, stepId) {
-    RecipeManager.removeStep(recipeId, stepId);
-    this.render();
-  },
-
-  moveStep(recipeId, fromIndex, toIndex) {
-    RecipeManager.reorderStep(recipeId, fromIndex, toIndex);
-    this.render();
-  },
-
-  onStepDragStart(event, index) {
-    this.draggedStepIndex = index;
-    event.currentTarget.classList.add('step-dragging');
-  },
-
-  onStepDragOver(event) {
-    event.preventDefault();
-  },
-
-  onStepDrop(event, recipeId, targetIndex) {
-    event.preventDefault();
-    if (this.draggedStepIndex !== null && this.draggedStepIndex !== targetIndex) {
-      RecipeManager.reorderStep(recipeId, this.draggedStepIndex, targetIndex);
-      this.draggedStepIndex = null;
-      this.render();
-    }
-  },
-
-  handlePhotoUpload(event, recipeId) {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      RecipeManager.updateRecipeField(recipeId, 'photo_path', e.target.result);
-      this.render();
-    };
-    reader.readAsDataURL(file);
-  },
-
-  handleSamplePhoto(recipeId) {
-    const r = RecipeManager.getHydratedRecipe(recipeId);
-    const title = encodeURIComponent(r?.recipe_title || 'Finished Dish');
-    const sampleUrl = `https://placehold.co/800x450/C2410C/FFFFFF?text=${title}`;
+      totalEl.textContent = `Total time: ${r.total_time_min} min`; } },  handleDifficultySelect(recipeId, rating) { const r = StorageService.db.recipe.find(item => item.recipe_id === Number(recipeId)); const nextVal = r && r.difficulty === rating ? null : rating; RecipeManager.updateRecipeField(recipeId, 'difficulty', nextVal); this.render(); },  handleToggleRecipeTag(recipeId, tagId) { RecipeManager.toggleRecipeTag(recipeId, tagId); this.render(); },  showNewTagInput() { const form = document.getElementById('new-tag-form'); const input = document.getElementById('new-tag-input'); if (form) { form.classList.toggle('hidden'); if (!form.classList.contains('hidden') && input) input.focus(); } },  handleCreateNewTag(recipeId) { const input = document.getElementById('new-tag-input'); if (!input \vert{}\vert{} !input.value.trim()) return; RecipeManager.addCustomTag(input.value.trim(), recipeId); this.render(); },  handleAddIngredient(recipeId) { const input = document.getElementById('add-ingredient-input'); if (!input \vert{}\vert{} !input.value.trim()) return; RecipeManager.addIngredientToRecipe(recipeId, input.value); this.render(); const refreshedInput = document.getElementById('add-ingredient-input'); if (refreshedInput) refreshedInput.focus(); },  handleRemoveIngredient(recipeId, ingredientId) { RecipeManager.removeIngredientFromRecipe(recipeId, ingredientId); this.render(); },  handleAddStep(recipeId) { const input = document.getElementById('add-step-input'); if (!input \vert{}\vert{} !input.value.trim()) return; RecipeManager.addStepToRecipe(recipeId, input.value); this.render(); const refreshedInput = document.getElementById('add-step-input'); if (refreshedInput) refreshedInput.focus(); },  handleRemoveStep(recipeId, stepId) { RecipeManager.removeStep(recipeId, stepId); this.render(); },  moveStep(recipeId, fromIndex, toIndex) { RecipeManager.reorderStep(recipeId, fromIndex, toIndex); this.render(); },  onStepDragStart(event, index) { this.draggedStepIndex = index; event.currentTarget.classList.add('step-dragging'); },  onStepDragOver(event) { event.preventDefault(); },  onStepDrop(event, recipeId, targetIndex) { event.preventDefault(); if (this.draggedStepIndex !== null && this.draggedStepIndex !== targetIndex) { RecipeManager.reorderStep(recipeId, this.draggedStepIndex, targetIndex); this.draggedStepIndex = null; this.render(); } },  handlePhotoUpload(event, recipeId) { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { RecipeManager.updateRecipeField(recipeId, 'photo_path', e.target.result); this.render(); }; reader.readAsDataURL(file); },  handleSamplePhoto(recipeId) { const r = RecipeManager.getHydratedRecipe(recipeId); const title = encodeURIComponent(r?.recipe_title \vert{}\vert{} 'Finished Dish'); const sampleUrl = `https://placehold.co/800x450/C2410C/FFFFFF?text=${title}`;
     RecipeManager.updateRecipeField(recipeId, 'photo_path', sampleUrl);
     this.render();
   },
@@ -1969,191 +1299,3 @@ const UI = {
                 <button onclick="UI.openRecipeEditor(${recipe.recipe_id}, false)" class="w-full text-left px-4 py-2.5 text-body hover:bg-gray-50">
                   Edit
                 </button>
-                <button onclick="UI.handleDuplicateRecipe(${recipe.recipe_id})" class="w-full text-left px-4 py-2.5 text-body hover:bg-gray-50">
-                  Duplicate
-                </button>
-                <hr class="my-1 border-gray-100">
-                <button onclick="UI.openDeleteRecipeModal(${recipe.recipe_id})" class="w-full text-left px-4 py-2.5 text-body hover:bg-red-50 text-danger font-medium">
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8 items-center pb-6 sm:pb-8 border-b border-stone-300/80">
-          <div class="${recipe.photo_path ? 'lg:col-span-7' : 'lg:col-span-12'} space-y-4">
-            <h1 class="text-heading !text-2xl sm:!text-4xl">${this.esc(recipe.recipe_title || 'Untitled Recipe')}</h1>
-            ${recipe.description ? `
-              <p class="text-body text-stone-700 max-w-3xl">${this.esc(recipe.description)}</p>
-            ` : ''}
-
-            ${recipe.tags.length > 0 ? `
-              <div class="flex flex-wrap gap-2 pt-1">
-                ${recipe.tags.map(t => `
-                  <span class="chip selected !min-h-[34px] !py-1 !px-3.5 !text-sm pointer-events-none">
-                    ✓ ${this.esc(t.tag_name)}
-                  </span>
-                `).join('')}
-              </div>
-            ` : ''}
-
-            <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 pt-4 border-t border-stone-300/70">
-              <div>
-                <span class="text-small block">Prep time</span>
-                <strong class="text-body font-semibold">${recipe.prep_time_min || 0} min</strong>
-              </div>
-              <div>
-                <span class="text-small block">Cook time</span>
-                <strong class="text-body font-semibold">${recipe.cook_time_min || 0} min</strong>
-              </div>
-              <div>
-                <span class="text-small block">Total time</span>
-                <strong class="text-body font-semibold text-primary">${recipe.total_time_min} min</strong>
-              </div>
-              <div>
-                <span class="text-small block">Servings</span>
-                <strong class="text-body font-semibold">${recipe.servings || '-'}</strong>
-              </div>
-              <div class="col-span-2 sm:col-span-1">
-                <span class="text-small block">Difficulty</span>
-                <strong class="text-body font-semibold">${recipe.difficulty ? `${recipe.difficulty} / 5` : '-'}</strong>
-              </div>
-            </div>
-          </div>
-
-          ${recipe.photo_path ? `
-            <div class="lg:col-span-5 rounded-2xl overflow-hidden border border-stone-300">
-              <img src="${this.esc(recipe.photo_path)}" alt="${this.esc(recipe.recipe_title)}" 
-                   class="w-full h-56 sm:h-72 object-cover"
-                   onerror="this.parentElement.style.display='none'">
-            </div>
-          ` : ''}
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          
-          <div class="lg:col-span-4 space-y-6 sm:space-y-8">
-            <div class="space-y-3">
-              <h2 class="text-heading">Ingredients</h2>
-              ${recipe.ingredients.length === 0 ? `
-                <p class="text-small">No ingredients listed yet.</p>
-              ` : `
-                <ul class="divide-y divide-stone-300/70 border-t border-b border-stone-300/70">
-                  ${recipe.ingredients.map(ing => `
-                    <li class="py-3 text-body flex items-center gap-3">
-                      <span class="w-2 h-2 rounded-full bg-primary shrink-0"></span>
-                      <span>${this.esc(ing.formatted)}</span>
-                    </li>
-                  `).join('')}
-                </ul>
-              `}
-            </div>
-
-            ${recipe.personal_notes ? `
-              <div class="pt-4 border-t-2 border-primary/40">
-                <h3 class="text-heading !text-[18px] mb-1.5 text-primary">Personal Notes</h3>
-                <p class="text-body text-stone-800">${this.esc(recipe.personal_notes)}</p>
-              </div>
-            ` : ''}
-          </div>
-
-          <div class="lg:col-span-8 pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-stone-300/70 lg:pl-12 space-y-4">
-            <h2 class="text-heading">How to Make It</h2>
-            ${recipe.steps.length === 0 ? `
-              <p class="text-small">No instructions added yet.</p>
-            ` : `
-              <ol class="divide-y divide-stone-300/70 border-t border-b border-stone-300/70">
-                ${recipe.steps.map(step => `
-                  <li class="flex items-start gap-4 py-5">
-                    <span class="w-8 h-8 rounded-full bg-primary text-white font-semibold text-base flex items-center justify-center shrink-0 mt-0.5">
-                      ${step.step_number}
-                    </span>
-                    <p class="text-body flex-1 pt-0.5">${this.esc(step.instruction)}</p>
-                  </li>
-                `).join('')}
-              </ol>
-            `}
-          </div>
-
-        </div>
-      </div>
-    `;
-  },
-
-  toggleDetailMenu() {
-    const menu = document.getElementById('detail-kebab-menu');
-    if (menu) menu.classList.toggle('hidden');
-  },
-
-  /* =====================================================================
-   * DELETE CONFIRMATION MODAL HANDLERS
-   * ===================================================================== */
-  openDeleteRecipeModal(recipeId) {
-    const r = RecipeManager.getHydratedRecipe(recipeId);
-    if (!r) return;
-
-    const modal = document.getElementById('delete-modal');
-    const titleEl = document.getElementById('delete-modal-title');
-    const descEl = document.getElementById('delete-modal-desc');
-    const confirmBtn = document.getElementById('btn-confirm-delete');
-
-    titleEl.textContent = "Are you sure you want to delete this recipe?";
-    descEl.textContent = `"${r.recipe_title || 'Untitled recipe'}" will be permanently removed from your notebook.`;
-
-    confirmBtn.onclick = () => {
-      RecipeManager.deleteRecipe(recipeId);
-      this.closeDeleteModal();
-      this.switchTab('recipes');
-    };
-
-    modal.classList.remove('hidden');
-  },
-
-  openDeleteIdeaModal(ideaId) {
-    const idea = IdeasManager.getIdeaById(ideaId);
-    if (!idea) return;
-
-    const modal = document.getElementById('delete-modal');
-    const titleEl = document.getElementById('delete-modal-title');
-    const descEl = document.getElementById('delete-modal-desc');
-    const confirmBtn = document.getElementById('btn-confirm-delete');
-
-    titleEl.textContent = "Are you sure you want to delete this idea?";
-    descEl.textContent = `"${idea.idea_title}" will be removed from your Ideas list.`;
-
-    confirmBtn.onclick = () => {
-      IdeasManager.deleteIdea(ideaId);
-      this.closeDeleteModal();
-      this.render();
-    };
-
-    modal.classList.remove('hidden');
-  },
-
-  confirmResetDemoData() {
-    const modal = document.getElementById('delete-modal');
-    const titleEl = document.getElementById('delete-modal-title');
-    const descEl = document.getElementById('delete-modal-desc');
-    const confirmBtn = document.getElementById('btn-confirm-delete');
-
-    titleEl.textContent = "Reset notebook to initial demo data?";
-    descEl.textContent = "This will restore the sample recipes and ideas for the active demo user.";
-
-    confirmBtn.onclick = () => {
-      StorageService.resetToSeed();
-      this.closeDeleteModal();
-      this.render();
-    };
-
-    modal.classList.remove('hidden');
-  },
-
-  closeDeleteModal() {
-    document.getElementById('delete-modal')?.classList.add('hidden');
-  }
-};
-
-window.onload = function () {
-  UI.init();
-};

@@ -22,7 +22,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=4">
+  <link rel="stylesheet" href="style.css?v=5">
 </head>
 <body class="min-h-screen flex flex-col bg-cream text-ink">
 
@@ -60,7 +60,7 @@
 
         <div class="bg-white/95 rounded-2xl p-6 sm:p-8 shadow-sm border border-stone-300/90 space-y-5">
           <!-- Primary One-Click Demo Day Login Prefill Button -->
-          <button type="button" id="btn-landing-demo-login" onclick="UI.triggerDemoPrefill()" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
+          <button type="button" id="btn-landing-demo-login" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
             Demo Day Login
           </button>
 
@@ -78,158 +78,4 @@
             </div>
             <div>
               <label for="landing-login-password" class="text-small block mb-1">Password</label>
-              <input type="password" id="landing-login-password" class="recipme-input" placeholder="••••••••••••" required>
-            </div>
-            <div id="landing-login-status" class="text-small hidden"></div>
-            <button type="submit" id="btn-landing-sign-in" class="btn-secondary w-full !min-h-[46px] font-semibold">
-              Sign In
-            </button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div class="text-center text-small">
-      RecipME Personal Recipe Notebook
-    </div>
-  </section>
-
-  <!-- =======================================================================
-       AUTHENTICATED APPLICATION SHELL (Hidden until user clicks Sign In)
-       ======================================================================= -->
-  <div id="authenticated-app" class="hidden min-h-screen flex flex-col">
-
-    <!-- FULL-WIDTH WEB APPLICATION TOP NAVIGATION BAR -->
-    <header class="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-stone-300/80">
-      <div class="web-container px-4 sm:px-8 lg:px-12 py-3 sm:py-0 sm:h-20 flex flex-wrap items-center justify-between gap-2 sm:gap-4">
-        
-        <!-- Brand Logo & Tagline -->
-        <button onclick="UI.switchTab('recipes')" class="flex items-center gap-2.5 sm:gap-3 text-left focus:outline-none group shrink-0">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-sm group-hover:opacity-95 transition">
-            R
-          </div>
-          <div>
-            <span class="font-bold text-xl sm:text-2xl tracking-tight text-ink block leading-none">RecipME</span>
-            <span class="text-xs text-muted hidden md:block mt-1">Personal Recipe Notebook</span>
-          </div>
-        </button>
-
-        <!-- Navigation Links + Larger Text Toggle + Auth Pill + Quick Action -->
-        <div class="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap justify-end">
-          <nav class="flex items-center gap-1 sm:gap-2">
-            <button id="nav-tab-recipes" onclick="UI.switchTab('recipes')" 
-                    class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
-              <span>Recipes</span>
-            </button>
-            <button id="nav-tab-ideas" onclick="UI.switchTab('ideas')" 
-                    class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
-              <span>Ideas</span>
-            </button>
-          </nav>
-
-          <div class="h-6 w-px bg-stone-300 hidden sm:block"></div>
-
-          <!-- Larger Text Toggle for easier reading while cooking -->
-          <button id="btn-large-text" onclick="UI.toggleLargeText()" 
-                  class="px-2.5 sm:px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-1.5 transition"
-                  title="Make text larger for easier reading while cooking">
-            <span class="font-bold text-sm sm:text-base">Aa</span>
-            <span id="large-text-label" class="hidden lg:inline">Larger text</span>
-          </button>
-
-          <!-- Account / Demo Login Status Button -->
-          <div id="auth-header-slot"></div>
-
-          <button onclick="UI.startNewBlankRecipe()" class="btn-main !min-h-[40px] sm:!min-h-[42px] !py-1.5 sm:!py-2 !px-3.5 sm:!px-4 !text-sm sm:!text-base hidden sm:inline-flex">
-            + New recipe
-          </button>
-        </div>
-      </div>
-    </header>
-
-    <!-- Plain-language storage warning banner (hidden unless triggered) -->
-    <div id="storage-error-banner" class="hidden web-container mt-4 px-4 sm:px-8 lg:px-12">
-      <div class="p-4 rounded-xl bg-red-50 border border-danger text-danger text-body">
-        We could not save your last change because your device's storage is full. Please free up some space so your recipes stay safe.
-      </div>
-    </div>
-
-    <!-- MAIN FULL-SCREEN WEB WORKSPACE -->
-    <main id="app-workspace" class="flex-1 w-full web-container px-4 sm:px-8 lg:px-12 py-6 sm:py-10">
-      <!-- Dynamic Full-Width Desktop & Mobile Views Rendered Here -->
-    </main>
-
-    <!-- DISCRETE FULL-WIDTH FOOTER -->
-    <footer class="border-t border-stone-300/70 mt-16 py-8">
-      <div class="web-container px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-small">
-        <span>RecipME Personal Recipe Notebook</span>
-        <div class="flex items-center gap-4">
-          <button onclick="UI.logoutToLoginScreen()" class="underline hover:text-ink">
-            Sign Out
-          </button>
-        </div>
-      </div>
-    </footer>
-
-  </div>
-
-  <!-- =======================================================================
-       ACCOUNT MODAL (Accessible from header once signed in)
-       ======================================================================= -->
-  <div id="auth-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-cream rounded-2xl max-w-[430px] w-full p-6 shadow-xl border border-stone-300">
-      <div class="flex items-start justify-between gap-3 mb-2">
-        <h3 class="text-heading">Demo Day Account</h3>
-        <button type="button" onclick="UI.closeAuthModal()" class="btn-icon !w-9 !h-9" title="Close">✕</button>
-      </div>
-      <p class="text-small mb-5">
-        Signed in with the <strong>Demo Day</strong> presentation account. You can sign out below to return to the login screen.
-      </p>
-
-      <!-- One-Click Demo Day Login Prefill Button -->
-      <button type="button" id="btn-demo-prefill" onclick="UI.triggerDemoPrefill()" class="btn-main w-full mb-5">
-        Demo Day Login
-      </button>
-
-      <!-- Credential Form -->
-      <form id="modal-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4 pt-4 border-t border-stone-300/80">
-        <div>
-          <label for="login-email" class="text-small block mb-1">Email</label>
-          <input type="email" id="login-email" class="recipme-input" placeholder="demoday@recipme.app" required>
-        </div>
-        <div>
-          <label for="login-password" class="text-small block mb-1">Password</label>
-          <input type="password" id="login-password" class="recipme-input" placeholder="••••••••••••" required>
-        </div>
-        <div id="login-status-msg" class="text-small hidden"></div>
-        <div class="flex items-center gap-3 pt-1">
-          <button type="button" onclick="UI.logoutToLoginScreen()" class="btn-secondary flex-1">Sign Out</button>
-          <button type="submit" class="btn-main flex-1">Sign In</button>
-        </div>
-      </form>
-    </div>
-  </div>
-
-  <!-- =======================================================================
-       DELETE CONFIRMATION MODAL
-       ======================================================================= -->
-  <div id="delete-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl max-w-[380px] w-full p-6 shadow-xl border border-gray-200">
-      <h3 id="delete-modal-title" class="text-heading mb-2">Are you sure you want to delete this recipe?</h3>
-      <p id="delete-modal-desc" class="text-body text-muted mb-6">
-        This will permanently remove it from your recipe notebook.
-      </p>
-      <div class="flex items-center gap-3">
-        <button onclick="UI.closeDeleteModal()" class="btn-secondary flex-1">
-          Keep recipe
-        </button>
-        <button id="btn-confirm-delete" class="btn-delete flex-1">
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script src="script.js?v=4"></script>
-</body>
-</html>
+              <input type="password" id="landing-login-password" class="recipme-input" placeholder="••••••••••••

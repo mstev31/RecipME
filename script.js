@@ -2,12 +2,12 @@
  * PREDETERMINED DEMO ACCOUNTS (For Cloudflare Pages / Live Presentation)
  *************************************************************************/
 const DEMO_ACCOUNTS = {
-  jordan: {
-    id: 'demo_jordan',
-    name: 'Jordan Mitchell',
-    email: 'jordan.demo@recipme.app',
+  demoDay: {
+    id: 'demo_day_user',
+    name: 'Demo Day',
+    email: 'demoday@recipme.app',
     password: 'RecipME2026!',
-    initials: 'JM',
+    initials: 'DD',
     badgeColor: '#C2410C'
   },
   doris: {
@@ -35,17 +35,17 @@ const DEMO_ACCOUNTS = {
  * 7. recipe_tag (recipe_id, tag_id)
  *************************************************************************/
 const StorageService = {
-  SESSION_KEY: 'recipme_active_demo_user_v1',
+  SESSION_KEY: 'recipme_active_demo_user_v2',
   currentUser: null,
   db: null,
 
   getStorageKey() {
-    const uid = this.currentUser ? this.currentUser.id : 'demo_jordan';
+    const uid = this.currentUser ? this.currentUser.id : 'demo_day_user';
     return `recipme_sqlite_db_${uid}_v1`;
   },
 
-  // Default initial dataset matching Jordan & Doris scenarios + Key Screen 2.4
-  getSeedDatabase(userId = 'demo_jordan') {
+  // Default initial dataset matching Demo Day & Doris scenarios + Key Screen 2.4
+  getSeedDatabase(userId = 'demo_day_user') {
     const now = new Date().toISOString();
     const baseTags = [
       { tag_id: 1, tag_name: "Chicken", is_preset: true },
@@ -207,33 +207,49 @@ const StorageService = {
   init() {
     try {
       const savedSession = localStorage.getItem(this.SESSION_KEY);
-      this.currentUser = savedSession ? JSON.parse(savedSession) : DEMO_ACCOUNTS.jordan;
-      this.loadActiveUserDatabase();
+      if (savedSession) {
+        this.currentUser = JSON.parse(savedSession);
+        this.loadActiveUserDatabase();
+      } else {
+        // Start unauthenticated so the Login Screen is the very first screen users see
+        this.currentUser = null;
+        this.db = this.getSeedDatabase(DEMO_ACCOUNTS.demoDay.id);
+      }
     } catch (err) {
       console.error("Database initialization fallback:", err);
-      this.currentUser = DEMO_ACCOUNTS.jordan;
-      this.db = this.getSeedDatabase(this.currentUser.id);
+      this.currentUser = null;
+      this.db = this.getSeedDatabase(DEMO_ACCOUNTS.demoDay.id);
     }
   },
 
   loadActiveUserDatabase() {
+    const uid = this.currentUser ? this.currentUser.id : DEMO_ACCOUNTS.demoDay.id;
     try {
       const saved = localStorage.getItem(this.getStorageKey());
       if (saved) {
         this.db = JSON.parse(saved);
       } else {
-        this.db = this.getSeedDatabase(this.currentUser.id);
+        this.db = this.getSeedDatabase(uid);
         this.commit();
       }
     } catch (err) {
-      this.db = this.getSeedDatabase(this.currentUser.id);
+      this.db = this.getSeedDatabase(uid);
     }
   },
 
   setActiveUser(userObj) {
     this.currentUser = userObj;
-    localStorage.setItem(this.SESSION_KEY, JSON.stringify(userObj));
-    this.loadActiveUserDatabase();
+    if (userObj) {
+      localStorage.setItem(this.SESSION_KEY, JSON.stringify(userObj));
+      this.loadActiveUserDatabase();
+    } else {
+      localStorage.removeItem(this.SESSION_KEY);
+    }
+  },
+
+  clearSession() {
+    this.currentUser = null;
+    localStorage.removeItem(this.SESSION_KEY);
   },
 
   // Autosaves every change to localStorage and triggers UI indicator
@@ -250,7 +266,8 @@ const StorageService = {
   },
 
   resetToSeed() {
-    this.db = this.getSeedDatabase(this.currentUser.id);
+    const uid = this.currentUser ? this.currentUser.id : DEMO_ACCOUNTS.demoDay.id;
+    this.db = this.getSeedDatabase(uid);
     this.commit();
   },
 
@@ -848,6 +865,23 @@ const UI = {
 
   init() {
     StorageService.init();
+    this.syncScreenVisibility();
+  },
+
+  syncScreenVisibility() {
+    const loginScreen = document.getElementById('login-screen');
+    const authApp = document.getElementById('authenticated-app');
+
+    if (!StorageService.currentUser) {
+      loginScreen?.classList.remove('hidden');
+      authApp?.classList.add('hidden');
+      this.clearLoginMessages();
+      return;
+    }
+
+    loginScreen?.classList.add('hidden');
+    authApp?.classList.remove('hidden');
+
     if (StorageService.db.recipe.length > 0) {
       this.activeRecipeId = StorageService.db.recipe[0].recipe_id;
     }
@@ -866,7 +900,7 @@ const UI = {
   },
 
   /* =====================================================================
-   * DEMO LOG IN & ACCOUNT SWITCHER HANDLERS
+   * DEMO DAY LOG IN & ACCOUNT SWITCHER HANDLERS
    * ===================================================================== */
   renderAuthHeader() {
     const slot = document.getElementById('auth-header-slot');
@@ -875,8 +909,8 @@ const UI = {
 
     if (!user) {
       slot.innerHTML = `
-        <button type="button" onclick="UI.openAuthModal()" class="btn-secondary !min-h-[40px] sm:!min-h-[42px] !py-1.5 !px-3.5 !text-sm">
-          Demo Log In
+        <button type="button" onclick="UI.logoutToLoginScreen()" class="btn-secondary !min-h-[40px] sm:!min-h-[42px] !py-1.5 !px-3.5 !text-sm">
+          Demo Day Login
         </button>
       `;
       return;
@@ -885,7 +919,7 @@ const UI = {
     slot.innerHTML = `
       <button type="button" onclick="UI.openAuthModal()"
               class="px-3 py-1.5 rounded-full border border-stone-300 bg-white/90 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-2 transition"
-              title="Signed in as ${this.esc(user.email)}. Click to open Demo Log In.">
+              title="Signed in as ${this.esc(user.name)} (${this.esc(user.email)}). Click to switch or sign out.">
         <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0"
               style="background-color: ${user.badgeColor || '#C2410C'}">
           ${this.esc(user.initials)}
@@ -895,13 +929,19 @@ const UI = {
     `;
   },
 
+  clearLoginMessages() {
+    ['login-status-msg', 'landing-login-status'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = '';
+        el.classList.add('hidden');
+      }
+    });
+  },
+
   openAuthModal() {
     const modal = document.getElementById('auth-modal');
-    const statusEl = document.getElementById('login-status-msg');
-    if (statusEl) {
-      statusEl.textContent = '';
-      statusEl.classList.add('hidden');
-    }
+    this.clearLoginMessages();
     if (modal) modal.classList.remove('hidden');
   },
 
@@ -909,9 +949,20 @@ const UI = {
     document.getElementById('auth-modal')?.classList.add('hidden');
   },
 
-  // Prefills Jordan's predetermined demo credentials and signs in smoothly
+  logoutToLoginScreen() {
+    this.closeAuthModal();
+    StorageService.clearSession();
+    const landingEmail = document.getElementById('landing-login-email');
+    const landingPass = document.getElementById('landing-login-password');
+    if (landingEmail) landingEmail.value = '';
+    if (landingPass) landingPass.value = '';
+    this.syncScreenVisibility();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  },
+
+  // Prefills Demo Day's predetermined demo credentials and signs in smoothly
   triggerDemoPrefill() {
-    this.runPrefillSequence(DEMO_ACCOUNTS.jordan);
+    this.runPrefillSequence(DEMO_ACCOUNTS.demoDay);
   },
 
   // Prefills Doris's predetermined demo credentials for family-cook walkthrough
@@ -920,17 +971,23 @@ const UI = {
   },
 
   runPrefillSequence(account) {
-    const emailInput = document.getElementById('login-email');
-    const passInput = document.getElementById('login-password');
-    const statusEl = document.getElementById('login-status-msg');
-
-    if (emailInput) emailInput.value = account.email;
-    if (passInput) passInput.value = account.password;
-    if (statusEl) {
-      statusEl.textContent = `Prefilled demo credentials for ${account.name}...`;
-      statusEl.className = 'text-small text-tagGreen font-medium';
-      statusEl.classList.remove('hidden');
-    }
+    // Populate both landing login inputs and modal inputs so whichever is visible updates
+    ['landing-login-email', 'login-email'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = account.email;
+    });
+    ['landing-login-password', 'login-password'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = account.password;
+    });
+    ['landing-login-status', 'login-status-msg'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = `Prefilled demo credentials for ${account.name}...`;
+        el.className = 'text-small text-tagGreen font-medium';
+        el.classList.remove('hidden');
+      }
+    });
 
     // Brief 500ms pause so live presentation viewers see the fields prefill
     setTimeout(() => {
@@ -940,12 +997,14 @@ const UI = {
 
   handleCredentialLogin(event) {
     event.preventDefault();
-    const email = (document.getElementById('login-email')?.value || '').trim().toLowerCase();
-    const pass = document.getElementById('login-password')?.value || '';
-    const statusEl = document.getElementById('login-status-msg');
+    const form = event.target;
+    const emailInput = form.querySelector('input[type="email"]');
+    const passInput = form.querySelector('input[type="password"]');
+    const email = (emailInput?.value || '').trim().toLowerCase();
+    const pass = passInput?.value || '';
 
-    if (email === DEMO_ACCOUNTS.jordan.email && pass === DEMO_ACCOUNTS.jordan.password) {
-      this.completeDemoSignIn(DEMO_ACCOUNTS.jordan);
+    if (email === DEMO_ACCOUNTS.demoDay.email && pass === DEMO_ACCOUNTS.demoDay.password) {
+      this.completeDemoSignIn(DEMO_ACCOUNTS.demoDay);
       return;
     }
     if (email === DEMO_ACCOUNTS.doris.email && pass === DEMO_ACCOUNTS.doris.password) {
@@ -953,23 +1012,24 @@ const UI = {
       return;
     }
 
-    if (statusEl) {
-      statusEl.textContent = 'Invalid email or password. Click "Demo Log In" above to prefill our demo credentials.';
-      statusEl.className = 'text-small text-danger font-medium';
-      statusEl.classList.remove('hidden');
-    }
+    ['landing-login-status', 'login-status-msg'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.textContent = 'Invalid email or password. Click "Demo Day Login" above to prefill our demo credentials.';
+        el.className = 'text-small text-danger font-medium';
+        el.classList.remove('hidden');
+      }
+    });
   },
 
   completeDemoSignIn(account) {
     StorageService.setActiveUser(account);
-    if (StorageService.db.recipe.length > 0) {
-      this.activeRecipeId = StorageService.db.recipe[0].recipe_id;
-    }
     this.selectedTagFilterId = null;
     this.searchQuery = '';
+    this.currentView = 'recipes';
     this.closeAuthModal();
-    this.renderAuthHeader();
-    this.switchTab('recipes');
+    this.syncScreenVisibility();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   updateNavBadges() {
@@ -1075,7 +1135,7 @@ const UI = {
   buildRecipesListColumnHTML() {
     const allTags = StorageService.db.tag;
     const matchingRecipes = SearchAndFilter.findRecipes(this.searchQuery, this.selectedTagFilterId);
-    const ownerName = StorageService.currentUser ? StorageService.currentUser.name : 'My';
+    const ownerName = StorageService.currentUser ? StorageService.currentUser.name : 'Demo Day';
 
     return `
       <div class="space-y-8">

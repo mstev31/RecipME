@@ -22,7 +22,7 @@
       }
     }
   </script>
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body class="min-h-screen flex flex-col bg-cream text-ink">
 
@@ -59,8 +59,8 @@
         </div>
 
         <div class="bg-white/95 rounded-2xl p-6 sm:p-8 shadow-sm border border-stone-300/90 space-y-5">
-          <!-- Primary One-Click Demo Day Login Button -->
-          <button type="button" id="btn-landing-demo-login" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
+          <!-- Primary One-Click Demo Day Login Prefill Button -->
+          <button type="button" id="btn-landing-demo-login" onclick="UI.triggerDemoPrefill()" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
             Demo Day Login
           </button>
 
@@ -70,8 +70,8 @@
             <div class="flex-grow border-t border-stone-300/80"></div>
           </div>
 
-          <!-- Credential Form (Prefilled automatically when Demo Day Login is clicked) -->
-          <form id="landing-login-form" class="space-y-4">
+          <!-- Credential Form (Prefilled when Demo Day Login is clicked; submits on Sign In) -->
+          <form id="landing-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4">
             <div>
               <label for="landing-login-email" class="text-small block mb-1">Email</label>
               <input type="email" id="landing-login-email" class="recipme-input" placeholder="demoday@recipme.app" required>
@@ -81,7 +81,7 @@
               <input type="password" id="landing-login-password" class="recipme-input" placeholder="••••••••••••" required>
             </div>
             <div id="landing-login-status" class="text-small hidden"></div>
-            <button type="submit" class="btn-secondary w-full !min-h-[46px] font-semibold">
+            <button type="submit" id="btn-landing-sign-in" class="btn-secondary w-full !min-h-[46px] font-semibold">
               Sign In
             </button>
           </form>
@@ -95,7 +95,7 @@
   </section>
 
   <!-- =======================================================================
-       AUTHENTICATED APPLICATION SHELL (Hidden until user logs in)
+       AUTHENTICATED APPLICATION SHELL (Hidden until user clicks Sign In)
        ======================================================================= -->
   <div id="authenticated-app" class="hidden min-h-screen flex flex-col">
 
@@ -186,13 +186,13 @@
         Signed in with the <strong>Demo Day</strong> presentation account. You can sign out below to return to the login screen.
       </p>
 
-      <!-- One-Click Demo Day Login Button -->
-      <button type="button" id="btn-demo-prefill" class="btn-main w-full mb-5">
+      <!-- One-Click Demo Day Login Prefill Button -->
+      <button type="button" id="btn-demo-prefill" onclick="UI.triggerDemoPrefill()" class="btn-main w-full mb-5">
         Demo Day Login
       </button>
 
       <!-- Credential Form -->
-      <form id="modal-login-form" class="space-y-4 pt-4 border-t border-stone-300/80">
+      <form id="modal-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4 pt-4 border-t border-stone-300/80">
         <div>
           <label for="login-email" class="text-small block mb-1">Email</label>
           <input type="email" id="login-email" class="recipme-input" placeholder="demoday@recipme.app" required>
@@ -230,51 +230,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=3"></script>
-  <script>
-    // Direct fallback binding so Demo Day Login works immediately even if script.js caches
-    document.addEventListener('DOMContentLoaded', function () {
-      function runDemoDayLogin() {
-        if (window.UI && typeof window.UI.triggerDemoPrefill === 'function') {
-          window.UI.triggerDemoPrefill();
-          return;
-        }
-        var emailEl = document.getElementById('landing-login-email');
-        var passEl = document.getElementById('landing-login-password');
-        if (emailEl) emailEl.value = 'demoday@recipme.app';
-        if (passEl) passEl.value = 'RecipME2026!';
-        localStorage.setItem('recipme_active_demo_user_v2', JSON.stringify({
-          id: 'demo_day_user',
-          name: 'Demo Day',
-          email: 'demoday@recipme.app',
-          initials: 'DD',
-          badgeColor: '#C2410C'
-        }));
-        setTimeout(function () { window.location.reload(); }, 300);
-      }
-
-      var landingBtn = document.getElementById('btn-landing-demo-login');
-      var modalBtn = document.getElementById('btn-demo-prefill');
-      var landingForm = document.getElementById('landing-login-form');
-      var modalForm = document.getElementById('modal-login-form');
-
-      if (landingBtn) landingBtn.addEventListener('click', runDemoDayLogin);
-      if (modalBtn) modalBtn.addEventListener('click', runDemoDayLogin);
-      if (landingForm) {
-        landingForm.addEventListener('submit', function (e) {
-          if (window.UI && typeof window.UI.handleCredentialLogin === 'function') {
-            window.UI.handleCredentialLogin(e);
-          }
-        });
-      }
-      if (modalForm) {
-        modalForm.addEventListener('submit', function (e) {
-          if (window.UI && typeof window.UI.handleCredentialLogin === 'function') {
-            window.UI.handleCredentialLogin(e);
-          }
-        });
-      }
-    });
-  </script>
+  <script src="script.js?v=4"></script>
 </body>
 </html>

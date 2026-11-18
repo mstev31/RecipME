@@ -1,0 +1,228 @@
+/* 
+ * 2.2 Foundations: Text Styles & Serif Font Stack
+ */
+:root {
+  --heading-size: 22px;
+  --body-size: 17px;
+  --small-size: 14px;
+}
+
+/* PBI 18: Accessibility Large Text Mode for family cooks (Doris persona) */
+body.large-text-mode {
+  --heading-size: 26px;
+  --body-size: 20px;
+  --small-size: 16px;
+}
+
+body {
+  font-family: Georgia, Cambria, "Times New Roman", Times, serif;
+  background-color: #FBF7F2;
+  color: #1F2937;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.text-heading {
+  font-size: var(--heading-size);
+  font-weight: 600;
+  line-height: 1.3;
+  color: #1F2937;
+  overflow-wrap: break-word;
+}
+
+.text-body {
+  font-size: var(--body-size);
+  font-weight: 400;
+  line-height: 1.45;
+  color: #1F2937;
+  overflow-wrap: break-word;
+}
+
+.text-small {
+  font-size: var(--small-size);
+  font-weight: 400;
+  line-height: 1.35;
+  color: #6B7280;
+}
+
+/* 
+ * 2.3 Components: Form field with orange border (#C2410C) while typing
+ */
+.recipme-input {
+  width: 100%;
+  font-size: var(--body-size);
+  color: #1F2937;
+  background-color: #FFFFFF;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 10px;
+  padding: 10px 12px;
+  min-height: 44px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+}
+
+.recipme-input:focus {
+  border-color: #C2410C !important;
+  box-shadow: 0 0 0 2px rgba(194, 65, 12, 0.15);
+}
+
+/* 2.3 Components: Buttons (Minimum 44px tap target for accessibility) */
+.btn-main {
+  background-color: #C2410C;
+  color: #FFFFFF;
+  font-size: var(--body-size);
+  font-weight: 600;
+  border-radius: 12px;
+  min-height: 48px;
+  padding: 10px 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: opacity 0.15s ease, transform 0.05s ease;
+  cursor: pointer;
+}
+.btn-main:hover {
+  opacity: 0.94;
+}
+.btn-main:active {
+  transform: scale(0.99);
+}
+
+.btn-secondary {
+  background-color: #FFFFFF;
+  color: #1F2937;
+  font-size: var(--body-size);
+  font-weight: 500;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 10px;
+  min-height: 44px;
+  padding: 8px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  cursor: pointer;
+}
+.btn-secondary:hover {
+  background-color: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+.btn-icon {
+  background-color: #FFFFFF;
+  color: #1F2937;
+  border: 1.5px solid #D1D5DB;
+  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+.btn-icon:hover {
+  background-color: #F3F4F6;
+  border-color: #9CA3AF;
+}
+
+.btn-delete {
+  background-color: #B91C1C;
+  color: #FFFFFF;
+  font-size: var(--body-size);
+  font-weight: 600;
+  border-radius: 10px;
+  min-height: 46px;
+  padding: 10px 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.btn-delete:hover {
+  opacity: 0.92;
+}
+
+/* 2.3 Components: Choice Chips (Tags & Difficulty 1-5) */
+.chip {
+  font-size: var(--body-size);
+  border-radius: 9999px;
+  min-height: 42px;
+  padding: 6px 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  border: 1.5px solid #D1D5DB;
+  background-color: #FFFFFF;
+  color: #1F2937;
+}
+.chip:hover:not(.selected) {
+  border-color: #9CA3AF;
+  background-color: #F9FAFB;
+}
+.chip.selected {
+  background-color: #3F7D3A;
+  border-color: #3F7D3A;
+  color: #FFFFFF;
+  font-weight: 500;
+}
+
+.chip-difficulty {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 9999px;
+  font-size: var(--body-size);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
+  border: 1.5px solid #D1D5DB;
+  background-color: #FFFFFF;
+  color: #1F2937;
+}
+.chip-difficulty:hover:not(.selected) {
+  border-color: #9CA3AF;
+  background-color: #F9FAFB;
+}
+.chip-difficulty.selected {
+  background-color: #3F7D3A;
+  border-color: #3F7D3A;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* Full-width Desktop Web Application Layout (Responsive on Desktop & Mobile) */
+.web-container {
+  width: 100%;
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Subtle animation for Autosave indicator */
+@keyframes pulseSave {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; color: #C2410C; }
+  100% { opacity: 1; color: #6B7280; }
+}
+.autosave-flash {
+  animation: pulseSave 0.8s ease;
+}
+
+/* Dragging step visual cue */
+.step-dragging {
+  opacity: 0.5;
+  border: 1.5px dashed #C2410C;
+  background-color: #FFF7ED;
+}

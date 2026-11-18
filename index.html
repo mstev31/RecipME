@@ -60,8 +60,56 @@
         signInBtn.focus();
       }
     };
+
+    window.demoDaySignIn = function (event) {
+      if (event) event.preventDefault();
+
+      var form = event && event.target ? event.target : document.getElementById('landing-login-form');
+      var emailInput = form ? form.querySelector('input[type="email"]') : document.getElementById('landing-login-email');
+      var passInput = form ? form.querySelector('input[type="password"]') : document.getElementById('landing-login-password');
+
+      var email = (emailInput ? emailInput.value : '').trim().toLowerCase();
+      var pass = passInput ? passInput.value : '';
+
+      if (email === 'demoday@recipme.app' && pass === 'RecipME2026!') {
+        var demoAccount = {
+          id: 'demo_day_user',
+          name: 'Demo Day',
+          email: 'demoday@recipme.app',
+          password: 'RecipME2026!',
+          initials: 'DD',
+          badgeColor: '#C2410C'
+        };
+
+        if (window.UI && typeof window.UI.completeDemoSignIn === 'function') {
+          window.UI.completeDemoSignIn(demoAccount);
+        } else {
+          try {
+            localStorage.setItem('recipme_active_demo_user_v2', JSON.stringify(demoAccount));
+          } catch (e) {}
+          var loginScreen = document.getElementById('login-screen');
+          var authApp = document.getElementById('authenticated-app');
+          if (loginScreen) loginScreen.classList.add('hidden');
+          if (authApp) authApp.classList.remove('hidden');
+          if (window.UI && typeof window.UI.init === 'function') {
+            window.UI.init();
+          }
+        }
+        return false;
+      }
+
+      ['landing-login-status', 'login-status-msg'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (el) {
+          el.textContent = 'Invalid email or password. Click "Demo Day Login" above to prefill.';
+          el.className = 'text-small text-danger font-medium';
+          el.classList.remove('hidden');
+        }
+      });
+      return false;
+    };
   </script>
-  <link rel="stylesheet" href="style.css?v=7">
+  <link rel="stylesheet" href="style.css?v=8">
 </head>
 <body class="min-h-screen flex flex-col bg-cream text-ink">
 
@@ -106,7 +154,7 @@
             <div class="flex-grow border-t border-stone-300/80"></div>
           </div>
 
-          <form id="landing-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4" autocomplete="off">
+          <form id="landing-login-form" onsubmit="return window.demoDaySignIn(event)" class="space-y-4" autocomplete="off">
             <div>
               <label for="landing-login-email" class="text-small block mb-1">Email</label>
               <input type="email" id="landing-login-email" class="recipme-input" placeholder="demoday@recipme.app" autocomplete="off" required>
@@ -208,7 +256,7 @@
         Demo Day Login
       </button>
 
-      <form id="modal-login-form" onsubmit="UI.handleCredentialLogin(event)" class="space-y-4 pt-4 border-t border-stone-300/80" autocomplete="off">
+      <form id="modal-login-form" onsubmit="return window.demoDaySignIn(event)" class="space-y-4 pt-4 border-t border-stone-300/80" autocomplete="off">
         <div>
           <label for="login-email" class="text-small block mb-1">Email</label>
           <input type="email" id="login-email" class="recipme-input" placeholder="demoday@recipme.app" autocomplete="off" required>
@@ -244,6 +292,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=7"></script>
+  <script src="script.js?v=8"></script>
 </body>
 </html>

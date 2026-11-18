@@ -22,7 +22,307 @@ const StorageService = {
 
   getStorageKey() {
     const uid = this.currentUser ? this.currentUser.id : DEMO_ACCOUNTS.demoDay.id;
-    return `recipme_sqlite_db_${uid}_v1`; },  getSeedDatabase() { const now = new Date().toISOString(); const baseTags = [ { tag_id: 1, tag_name: "Chicken", is_preset: true }, { tag_id: 2, tag_name: "Weeknight", is_preset: true }, { tag_id: 3, tag_name: "Fish", is_preset: true }, { tag_id: 4, tag_name: "Gluten-Free", is_preset: true }, { tag_id: 5, tag_name: "Holiday", is_preset: true }, { tag_id: 6, tag_name: "Vegetarian", is_preset: true } ];  return { idea: [ { idea_id: 1, idea_title: "Honey chipotle chicken", idea_note: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.", created_at: now, updated_at: now }, { idea_id: 2, idea_title: "Smoked turkey gumbo variation", idea_note: "Try Kayla's idea: smoked turkey instead of sausage for next Thanksgiving.", created_at: now, updated_at: now }, { idea_id: 3, idea_title: "Blackened catfish tacos with lime crema", idea_note: "Quick weeknight fish tacos with shredded cabbage, lime juice, and garlic sour cream.", created_at: now, updated_at: now } ], recipe: [ { recipe_id: 1, source_idea_id: 1, recipe_title: "Honey chipotle chicken", description: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.", prep_time_min: 15, cook_time_min: 20, servings: 4, difficulty: 2, personal_notes: "Double the sauce next time.", photo_path: "", created_at: now, updated_at: now }, { recipe_id: 2, source_idea_id: null, recipe_title: "Mama's Chicken and Sausage Gumbo", description: "The gumbo we make every Christmas Eve. Dark roux, takes patience.", prep_time_min: 45, cook_time_min: 135, servings: 12, difficulty: 4, personal_notes: "Stir the whole time. Don't walk away.", photo_path: "", created_at: now, updated_at: now } ], step: [ { step_id: 1, recipe_id: 1, step_number: 1, instruction: "Mix honey, chopped chipotle, lime juice, and garlic." }, { step_id: 2, recipe_id: 1, step_number: 2, instruction: "Marinate the chicken for 10 minutes." }, { step_id: 3, recipe_id: 2, step_number: 1, instruction: "Make the roux with oil and flour, stirring until it is the color of chocolate." }, { step_id: 4, recipe_id: 2, step_number: 2, instruction: "Add chopped onions, bell pepper, and celery and stir until softened." }, { step_id: 5, recipe_id: 2, step_number: 3, instruction: "Simmer gently with stock, chicken, and sliced andouille sausage." } ], ingredient: [ { ingredient_id: 1, ingredient_name: "chicken thighs" }, { ingredient_id: 2, ingredient_name: "honey" }, { ingredient_id: 3, ingredient_name: "chipotle peppers in adobo" }, { ingredient_id: 4, ingredient_name: "limes" }, { ingredient_id: 5, ingredient_name: "chicken" }, { ingredient_id: 6, ingredient_name: "andouille sausage" }, { ingredient_id: 7, ingredient_name: "vegetable oil" }, { ingredient_id: 8, ingredient_name: "all-purpose flour" }, { ingredient_id: 9, ingredient_name: "green onions" } ], recipe_ingredient: [ { recipe_id: 1, ingredient_id: 1, quantity: 2, unit: "lb", line_order: 1 }, { recipe_id: 1, ingredient_id: 2, quantity: 3, unit: "tbsp", line_order: 2 }, { recipe_id: 1, ingredient_id: 3, quantity: 2, unit: "", line_order: 3 }, { recipe_id: 1, ingredient_id: 4, quantity: 2, unit: "", line_order: 4 }, { recipe_id: 2, ingredient_id: 5, quantity: 2, unit: "lb", line_order: 1 }, { recipe_id: 2, ingredient_id: 6, quantity: 1, unit: "lb", line_order: 2 }, { recipe_id: 2, ingredient_id: 7, quantity: 1, unit: "cup", line_order: 3 }, { recipe_id: 2, ingredient_id: 8, quantity: 1, unit: "cup", line_order: 4 }, { recipe_id: 2, ingredient_id: 9, quantity: 1, unit: "bunch", line_order: 5 } ], tag: baseTags, recipe_tag: [ { recipe_id: 1, tag_id: 1 }, // Chicken { recipe_id: 1, tag_id: 2 }, // Weeknight { recipe_id: 1, tag_id: 4 }, // Gluten-Free { recipe_id: 2, tag_id: 1 }, // Chicken { recipe_id: 2, tag_id: 5 }  // Holiday ] }; },  init() { try { const savedSession = localStorage.getItem(this.SESSION_KEY); if (savedSession) { this.currentUser = JSON.parse(savedSession); this.loadActiveUserDatabase(); } else { // Start unauthenticated so the Login Screen is the very first screen users see this.currentUser = null; this.db = this.getSeedDatabase(); } } catch (err) { console.error("Database initialization fallback:", err); this.currentUser = null; this.db = this.getSeedDatabase(); } },  loadActiveUserDatabase() { try { const saved = localStorage.getItem(this.getStorageKey()); if (saved) { this.db = JSON.parse(saved); } else { this.db = this.getSeedDatabase(); this.commit(); } } catch (err) { this.db = this.getSeedDatabase(); } },  setActiveUser(userObj) { this.currentUser = userObj; if (userObj) { localStorage.setItem(this.SESSION_KEY, JSON.stringify(userObj)); this.loadActiveUserDatabase(); } else { localStorage.removeItem(this.SESSION_KEY); } },  clearSession() { this.currentUser = null; localStorage.removeItem(this.SESSION_KEY); },  commit() { try { localStorage.setItem(this.getStorageKey(), JSON.stringify(this.db)); document.getElementById('storage-error-banner')?.classList.add('hidden'); UI.notifyAutosave(); UI.updateNavBadges(); } catch (err) { document.getElementById('storage-error-banner')?.classList.remove('hidden'); } },  nextId(tableName, pkField) { const rows = this.db[tableName] \vert{}\vert{} []; if (rows.length === 0) return 1; return Math.max(...rows.map(r => Number(r[pkField]) \vert{}\vert{} 0)) + 1; } };  /************************************************************************* * LAYER 2: APPLICATION LOGIC LAYER *************************************************************************/ const IdeasManager = { getAllIdeas() { return [...StorageService.db.idea].sort( (a, b) => new Date(b.updated_at) - new Date(a.updated_at) ); },  getIdeaById(ideaId) { return StorageService.db.idea.find(i => i.idea_id === Number(ideaId)) \vert{}\vert{} null; },  createIdea(rawText, explicitTitle = "") { const trimmed = (rawText \vert{}\vert{} "").trim(); const titleTrimmed = (explicitTitle \vert{}\vert{} "").trim(); if (!trimmed && !titleTrimmed) return null;  let ideaTitle = titleTrimmed; let ideaNote = trimmed;  if (!ideaTitle) { const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean); ideaTitle = lines[0]; if (lines.length === 1) { const dotIndex = trimmed.indexOf('.'); if (dotIndex > 0 && dotIndex < 55) { ideaTitle = trimmed.slice(0, dotIndex).trim(); } } else { ideaNote = lines.slice(1).join('\n'); } }  const now = new Date().toISOString(); const newIdea = { idea_id: StorageService.nextId('idea', 'idea_id'), idea_title: ideaTitle, idea_note: ideaNote \vert{}\vert{} ideaTitle, created_at: now, updated_at: now };  StorageService.db.idea.push(newIdea); StorageService.commit(); return newIdea; },  updateIdea(ideaId, fields) { const idea = this.getIdeaById(ideaId); if (!idea) return; if (fields.idea_title !== undefined) idea.idea_title = fields.idea_title; if (fields.idea_note !== undefined) idea.idea_note = fields.idea_note; idea.updated_at = new Date().toISOString(); StorageService.commit(); },  deleteIdea(ideaId) { const id = Number(ideaId); StorageService.db.idea = StorageService.db.idea.filter(i => i.idea_id !== id); StorageService.db.recipe.forEach(r => { if (r.source_idea_id === id) r.source_idea_id = null; }); StorageService.commit(); },  turnIdeaIntoRecipe(ideaId) { const idea = this.getIdeaById(ideaId); if (!idea) return null;  const now = new Date().toISOString(); const newRecipe = { recipe_id: StorageService.nextId('recipe', 'recipe_id'), source_idea_id: idea.idea_id, recipe_title: idea.idea_title, description: idea.idea_note \vert{}\vert{} idea.idea_title, prep_time_min: null, cook_time_min: null, servings: null, difficulty: null, personal_notes: "", photo_path: "", created_at: now, updated_at: now };  StorageService.db.recipe.push(newRecipe); StorageService.commit(); return newRecipe; } };  const RecipeManager = { calculateTotalTime(prepMin, cookMin) { const p = parseInt(prepMin, 10) \vert{}\vert{} 0; const c = parseInt(cookMin, 10) \vert{}\vert{} 0; return p + c; },  formatIngredientLine(riRow, ingRow) { const parts = []; if (riRow.quantity !== null && riRow.quantity !== "" && riRow.quantity !== undefined) { parts.push(riRow.quantity); } if (riRow.unit) { parts.push(riRow.unit); } if (ingRow && ingRow.ingredient_name) { parts.push(ingRow.ingredient_name); } return parts.join(" ").trim(); },  parseIngredientString(rawLine) { const clean = (rawLine \vert{}\vert{} "").trim(); if (!clean) return null;  const knownUnits = [ 'lb', 'lbs', 'pound', 'pounds', 'oz', 'ounce', 'ounces', 'tbsp', 'tablespoon', 'tablespoons', 'tsp', 'teaspoon', 'teaspoons',
+    return `recipme_sqlite_db_${uid}_v1`;
+  },
+
+  getSeedDatabase() {
+    const now = new Date().toISOString();
+    const baseTags = [
+      { tag_id: 1, tag_name: "Chicken", is_preset: true },
+      { tag_id: 2, tag_name: "Weeknight", is_preset: true },
+      { tag_id: 3, tag_name: "Fish", is_preset: true },
+      { tag_id: 4, tag_name: "Gluten-Free", is_preset: true },
+      { tag_id: 5, tag_name: "Holiday", is_preset: true },
+      { tag_id: 6, tag_name: "Vegetarian", is_preset: true }
+    ];
+
+    return {
+      idea: [
+        {
+          idea_id: 1,
+          idea_title: "Honey chipotle chicken",
+          idea_note: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.",
+          created_at: now,
+          updated_at: now
+        },
+        {
+          idea_id: 2,
+          idea_title: "Smoked turkey gumbo variation",
+          idea_note: "Try Kayla's idea: smoked turkey instead of sausage for next Thanksgiving.",
+          created_at: now,
+          updated_at: now
+        },
+        {
+          idea_id: 3,
+          idea_title: "Blackened catfish tacos with lime crema",
+          idea_note: "Quick weeknight fish tacos with shredded cabbage, lime juice, and garlic sour cream.",
+          created_at: now,
+          updated_at: now
+        }
+      ],
+      recipe: [
+        {
+          recipe_id: 1,
+          source_idea_id: 1,
+          recipe_title: "Honey chipotle chicken",
+          description: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.",
+          prep_time_min: 15,
+          cook_time_min: 20,
+          servings: 4,
+          difficulty: 2,
+          personal_notes: "Double the sauce next time.",
+          photo_path: "",
+          created_at: now,
+          updated_at: now
+        },
+        {
+          recipe_id: 2,
+          source_idea_id: null,
+          recipe_title: "Mama's Chicken and Sausage Gumbo",
+          description: "The gumbo we make every Christmas Eve. Dark roux, takes patience.",
+          prep_time_min: 45,
+          cook_time_min: 135,
+          servings: 12,
+          difficulty: 4,
+          personal_notes: "Stir the whole time. Don't walk away.",
+          photo_path: "",
+          created_at: now,
+          updated_at: now
+        }
+      ],
+      step: [
+        { step_id: 1, recipe_id: 1, step_number: 1, instruction: "Mix honey, chopped chipotle, lime juice, and garlic." },
+        { step_id: 2, recipe_id: 1, step_number: 2, instruction: "Marinate the chicken for 10 minutes." },
+        { step_id: 3, recipe_id: 2, step_number: 1, instruction: "Make the roux with oil and flour, stirring until it is the color of chocolate." },
+        { step_id: 4, recipe_id: 2, step_number: 2, instruction: "Add chopped onions, bell pepper, and celery and stir until softened." },
+        { step_id: 5, recipe_id: 2, step_number: 3, instruction: "Simmer gently with stock, chicken, and sliced andouille sausage." }
+      ],
+      ingredient: [
+        { ingredient_id: 1, ingredient_name: "chicken thighs" },
+        { ingredient_id: 2, ingredient_name: "honey" },
+        { ingredient_id: 3, ingredient_name: "chipotle peppers in adobo" },
+        { ingredient_id: 4, ingredient_name: "limes" },
+        { ingredient_id: 5, ingredient_name: "chicken" },
+        { ingredient_id: 6, ingredient_name: "andouille sausage" },
+        { ingredient_id: 7, ingredient_name: "vegetable oil" },
+        { ingredient_id: 8, ingredient_name: "all-purpose flour" },
+        { ingredient_id: 9, ingredient_name: "green onions" }
+      ],
+      recipe_ingredient: [
+        { recipe_id: 1, ingredient_id: 1, quantity: 2, unit: "lb", line_order: 1 },
+        { recipe_id: 1, ingredient_id: 2, quantity: 3, unit: "tbsp", line_order: 2 },
+        { recipe_id: 1, ingredient_id: 3, quantity: 2, unit: "", line_order: 3 },
+        { recipe_id: 1, ingredient_id: 4, quantity: 2, unit: "", line_order: 4 },
+        { recipe_id: 2, ingredient_id: 5, quantity: 2, unit: "lb", line_order: 1 },
+        { recipe_id: 2, ingredient_id: 6, quantity: 1, unit: "lb", line_order: 2 },
+        { recipe_id: 2, ingredient_id: 7, quantity: 1, unit: "cup", line_order: 3 },
+        { recipe_id: 2, ingredient_id: 8, quantity: 1, unit: "cup", line_order: 4 },
+        { recipe_id: 2, ingredient_id: 9, quantity: 1, unit: "bunch", line_order: 5 }
+      ],
+      tag: baseTags,
+      recipe_tag: [
+        { recipe_id: 1, tag_id: 1 }, // Chicken
+        { recipe_id: 1, tag_id: 2 }, // Weeknight
+        { recipe_id: 1, tag_id: 4 }, // Gluten-Free
+        { recipe_id: 2, tag_id: 1 }, // Chicken
+        { recipe_id: 2, tag_id: 5 }  // Holiday
+      ]
+    };
+  },
+
+  init() {
+    try {
+      const savedSession = localStorage.getItem(this.SESSION_KEY);
+      if (savedSession) {
+        this.currentUser = JSON.parse(savedSession);
+        this.loadActiveUserDatabase();
+      } else {
+        this.currentUser = null;
+        this.db = this.getSeedDatabase();
+      }
+    } catch (err) {
+      console.error("Database initialization fallback:", err);
+      this.currentUser = null;
+      this.db = this.getSeedDatabase();
+    }
+  },
+
+  loadActiveUserDatabase() {
+    try {
+      const saved = localStorage.getItem(this.getStorageKey());
+      if (saved) {
+        this.db = JSON.parse(saved);
+      } else {
+        this.db = this.getSeedDatabase();
+        this.commit();
+      }
+    } catch (err) {
+      this.db = this.getSeedDatabase();
+    }
+  },
+
+  setActiveUser(userObj) {
+    this.currentUser = userObj;
+    if (userObj) {
+      try {
+        localStorage.setItem(this.SESSION_KEY, JSON.stringify(userObj));
+      } catch (e) {
+        // Ignore storage errors on session key
+      }
+      this.loadActiveUserDatabase();
+    } else {
+      localStorage.removeItem(this.SESSION_KEY);
+    }
+  },
+
+  clearSession() {
+    this.currentUser = null;
+    try {
+      localStorage.removeItem(this.SESSION_KEY);
+    } catch (e) {
+      // Ignore storage errors
+    }
+  },
+
+  commit() {
+    try {
+      localStorage.setItem(this.getStorageKey(), JSON.stringify(this.db));
+      document.getElementById('storage-error-banner')?.classList.add('hidden');
+      UI.notifyAutosave();
+      UI.updateNavBadges();
+    } catch (err) {
+      document.getElementById('storage-error-banner')?.classList.remove('hidden');
+    }
+  },
+
+  nextId(tableName, pkField) {
+    const rows = this.db[tableName] || [];
+    if (rows.length === 0) return 1;
+    return Math.max(...rows.map(r => Number(r[pkField]) || 0)) + 1;
+  }
+};
+
+/*************************************************************************
+ * LAYER 2: APPLICATION LOGIC LAYER
+ *************************************************************************/
+const IdeasManager = {
+  getAllIdeas() {
+    return [...StorageService.db.idea].sort(
+      (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+    );
+  },
+
+  getIdeaById(ideaId) {
+    return StorageService.db.idea.find(i => i.idea_id === Number(ideaId)) || null;
+  },
+
+  createIdea(rawText, explicitTitle = "") {
+    const trimmed = (rawText || "").trim();
+    const titleTrimmed = (explicitTitle || "").trim();
+    if (!trimmed && !titleTrimmed) return null;
+
+    let ideaTitle = titleTrimmed;
+    let ideaNote = trimmed;
+
+    if (!ideaTitle) {
+      const lines = trimmed.split('\n').map(l => l.trim()).filter(Boolean);
+      ideaTitle = lines[0];
+      if (lines.length === 1) {
+        const dotIndex = trimmed.indexOf('.');
+        if (dotIndex > 0 && dotIndex < 55) {
+          ideaTitle = trimmed.slice(0, dotIndex).trim();
+        }
+      } else {
+        ideaNote = lines.slice(1).join('\n');
+      }
+    }
+
+    const now = new Date().toISOString();
+    const newIdea = {
+      idea_id: StorageService.nextId('idea', 'idea_id'),
+      idea_title: ideaTitle,
+      idea_note: ideaNote || ideaTitle,
+      created_at: now,
+      updated_at: now
+    };
+
+    StorageService.db.idea.push(newIdea);
+    StorageService.commit();
+    return newIdea;
+  },
+
+  updateIdea(ideaId, fields) {
+    const idea = this.getIdeaById(ideaId);
+    if (!idea) return;
+    if (fields.idea_title !== undefined) idea.idea_title = fields.idea_title;
+    if (fields.idea_note !== undefined) idea.idea_note = fields.idea_note;
+    idea.updated_at = new Date().toISOString();
+    StorageService.commit();
+  },
+
+  deleteIdea(ideaId) {
+    const id = Number(ideaId);
+    StorageService.db.idea = StorageService.db.idea.filter(i => i.idea_id !== id);
+    StorageService.db.recipe.forEach(r => {
+      if (r.source_idea_id === id) r.source_idea_id = null;
+    });
+    StorageService.commit();
+  },
+
+  turnIdeaIntoRecipe(ideaId) {
+    const idea = this.getIdeaById(ideaId);
+    if (!idea) return null;
+
+    const now = new Date().toISOString();
+    const newRecipe = {
+      recipe_id: StorageService.nextId('recipe', 'recipe_id'),
+      source_idea_id: idea.idea_id,
+      recipe_title: idea.idea_title,
+      description: idea.idea_note || idea.idea_title,
+      prep_time_min: null,
+      cook_time_min: null,
+      servings: null,
+      difficulty: null,
+      personal_notes: "",
+      photo_path: "",
+      created_at: now,
+      updated_at: now
+    };
+
+    StorageService.db.recipe.push(newRecipe);
+    StorageService.commit();
+    return newRecipe;
+  }
+};
+
+const RecipeManager = {
+  calculateTotalTime(prepMin, cookMin) {
+    const p = parseInt(prepMin, 10) || 0;
+    const c = parseInt(cookMin, 10) || 0;
+    return p + c;
+  },
+
+  formatIngredientLine(riRow, ingRow) {
+    const parts = [];
+    if (riRow.quantity !== null && riRow.quantity !== "" && riRow.quantity !== undefined) {
+      parts.push(riRow.quantity);
+    }
+    if (riRow.unit) {
+      parts.push(riRow.unit);
+    }
+    if (ingRow && ingRow.ingredient_name) {
+      parts.push(ingRow.ingredient_name);
+    }
+    return parts.join(" ").trim();
+  },
+
+  parseIngredientString(rawLine) {
+    const clean = (rawLine || "").trim();
+    if (!clean) return null;
+
+    const knownUnits = [
+      'lb', 'lbs', 'pound', 'pounds', 'oz', 'ounce', 'ounces',
+      'tbsp', 'tablespoon', 'tablespoons', 'tsp', 'teaspoon', 'teaspoons',
       'cup', 'cups', 'clove', 'cloves', 'bunch', 'bunches', 'can', 'cans',
       'pinch', 'dash', 'g', 'kg', 'ml', 'l', 'slice', 'slices', 'piece', 'pieces'
     ];
@@ -396,6 +696,7 @@ const UI = {
   selectedTagFilterId: null,
   largeTextEnabled: false,
   draggedStepIndex: null,
+  isLoggingIn: false,
 
   init() {
     StorageService.init();
@@ -409,6 +710,7 @@ const UI = {
     if (!StorageService.currentUser) {
       loginScreen?.classList.remove('hidden');
       authApp?.classList.add('hidden');
+      this.resetDemoLoginButtons();
       this.clearLoginMessages();
       return;
     }
@@ -473,33 +775,55 @@ const UI = {
     });
   },
 
+  resetDemoLoginButtons() {
+    this.isLoggingIn = false;
+    ['btn-landing-demo-login', 'btn-demo-prefill'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Demo Day Login';
+      }
+    });
+  },
+
   openAuthModal() {
     const modal = document.getElementById('auth-modal');
+    this.resetDemoLoginButtons();
     this.clearLoginMessages();
     if (modal) modal.classList.remove('hidden');
   },
 
   closeAuthModal() {
+    this.resetDemoLoginButtons();
     document.getElementById('auth-modal')?.classList.add('hidden');
   },
 
   logoutToLoginScreen() {
     this.closeAuthModal();
     StorageService.clearSession();
-    const landingEmail = document.getElementById('landing-login-email');
-    const landingPass = document.getElementById('landing-login-password');
-    if (landingEmail) landingEmail.value = '';
-    if (landingPass) landingPass.value = '';
+    ['landing-login-email', 'login-email', 'landing-login-password', 'login-password'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
     this.syncScreenVisibility();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
-  // Prefills Demo Day's predetermined demo credentials and signs in smoothly
+  // Prefills Demo Day's predetermined demo credentials and logs in the user
   triggerDemoPrefill() {
-    this.runPrefillSequence(DEMO_ACCOUNTS.demoDay);
-  },
+    if (this.isLoggingIn) return;
+    this.isLoggingIn = true;
 
-  runPrefillSequence(account) {
+    const account = DEMO_ACCOUNTS.demoDay;
+
+    ['btn-landing-demo-login', 'btn-demo-prefill'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Logging in as Demo Day...';
+      }
+    });
+
     ['landing-login-email', 'login-email'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = account.email;
@@ -511,7 +835,7 @@ const UI = {
     ['landing-login-status', 'login-status-msg'].forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        el.textContent = `Prefilled demo credentials for ${account.name}...`;
+        el.textContent = `Prefilled credentials for ${account.name} — signing in...`;
         el.className = 'text-small text-tagGreen font-medium';
         el.classList.remove('hidden');
       }
@@ -519,7 +843,7 @@ const UI = {
 
     setTimeout(() => {
       this.completeDemoSignIn(account);
-    }, 500);
+    }, 350);
   },
 
   handleCredentialLogin(event) {
@@ -546,6 +870,7 @@ const UI = {
   },
 
   completeDemoSignIn(account) {
+    this.resetDemoLoginButtons();
     StorageService.setActiveUser(account);
     this.selectedTagFilterId = null;
     this.searchQuery = '';
@@ -619,683 +944,4 @@ const UI = {
 
   startNewBlankRecipe() {
     const r = RecipeManager.createBlankRecipe();
-    this.openRecipeEditor(r.recipe_id, true);
-  },
-
-  handleTurnIdeaIntoRecipe(ideaId) {
-    const newRecipe = IdeasManager.turnIdeaIntoRecipe(ideaId);
-    if (newRecipe) {
-      this.openRecipeEditor(newRecipe.recipe_id, true);
-    }
-  },
-
-  render() {
-    this.updateNavActiveStyles();
-    const workspace = document.getElementById('app-workspace');
-    if (!workspace) return;
-
-    if (this.currentView === 'editor') {
-      workspace.innerHTML = this.buildRecipeEditorCardHTML(this.activeRecipeId);
-      return;
-    }
-
-    if (this.currentView === 'recipe-view') {
-      workspace.innerHTML = this.buildRecipeDetailCardHTML(this.activeRecipeId);
-      return;
-    }
-
-    if (this.currentView === 'ideas') {
-      workspace.innerHTML = this.buildIdeasListColumnHTML();
-      return;
-    }
-
-    workspace.innerHTML = this.buildRecipesListColumnHTML();
-  },
-
-  /* =====================================================================
-   * VIEW 1: FULL-SCREEN DESKTOP RECIPES DIRECTORY
-   * ===================================================================== */
-  buildRecipesListColumnHTML() {
-    const allTags = StorageService.db.tag;
-    const matchingRecipes = SearchAndFilter.findRecipes(this.searchQuery, this.selectedTagFilterId);
-    const ownerName = StorageService.currentUser ? StorageService.currentUser.name : 'Demo Day';
-
-    return `
-      <div class="space-y-8">
-        <!-- Top Row: Page Heading & Search Bar side-by-side on desktop -->
-        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-6 border-b border-stone-300/80">
-          <div>
-            <h1 class="text-heading !text-3xl">${this.esc(ownerName)}'s Recipes</h1>
-            <p class="text-small mt-1">Search by keyword, ingredient, or tag across your personal cookbook</p>
-          </div>
-
-          <!-- Search Input & Mobile New Recipe Button -->
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-            <div class="relative w-full sm:w-96">
-              <input id="recipe-search-input" type="text" 
-                     class="recipme-input pr-10" 
-                     placeholder="Search recipes or ingredients (e.g., lime, gumbo)..."
-                     value="${this.esc(this.searchQuery)}"
-                     oninput="UI.handleSearchInput(this.value)">
-              ${this.searchQuery ? `
-                <button onclick="UI.handleSearchInput('')" 
-                        class="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-ink p-1"
-                        title="Clear search">
-                  ✕
-                </button>
-              ` : ''}
-            </div>
-            <button onclick="UI.startNewBlankRecipe()" class="btn-main sm:hidden">
-              + New recipe
-            </button>
-          </div>
-        </div>
-
-        <!-- Open Choice Chip Tag Filter Bar -->
-        <div class="flex flex-wrap items-center gap-2.5">
-          <span class="text-small mr-2 font-medium">Filter by tag:</span>
-          <button onclick="UI.selectTagFilter(null)" 
-                  class="chip ${this.selectedTagFilterId === null ? 'selected' : ''}">
-            ${this.selectedTagFilterId === null ? '<span>✓</span>' : ''}
-            <span>All Recipes</span>
-          </button>
-          ${allTags.map(tag => {
-            const isSelected = this.selectedTagFilterId === tag.tag_id;
-            return `
-              <button onclick="UI.selectTagFilter(${tag.tag_id})" 
-                      class="chip ${isSelected ? 'selected' : ''}">
-                ${isSelected ? '<span>✓</span>' : ''}
-                <span>${this.esc(tag.tag_name)}</span>
-              </button>
-            `;
-          }).join('')}
-        </div>
-
-        <!-- Multi-Column Responsive Recipe Grid -->
-        ${matchingRecipes.length === 0 ? `
-          <div class="py-16 text-center border-t border-b border-stone-300/70">
-            <p class="text-heading mb-2">No recipes match your search</p>
-            <p class="text-small mb-6">Try another keyword or clear the active tag filter.</p>
-            <button onclick="UI.resetFilters()" class="btn-secondary">
-              Show all recipes
-            </button>
-          </div>
-        ` : `
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-10 pt-2">
-            ${matchingRecipes.map(r => `
-              <article onclick="UI.openRecipeView(${r.recipe_id})" 
-                       class="group cursor-pointer flex flex-col justify-between border-t-2 border-stone-800/80 hover:border-primary pt-5 transition-all">
-                <div>
-                  ${r.photo_path ? `
-                    <div class="mb-4 rounded-xl overflow-hidden bg-stone-200 aspect-[16/10]">
-                      <img src="${this.esc(r.photo_path)}" alt="${this.esc(r.recipe_title)}" 
-                           class="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-200"
-                           onerror="this.parentElement.style.display='none'">
-                    </div>
-                  ` : ''}
-
-                  <div class="flex items-start justify-between gap-3">
-                    <h2 class="text-heading group-hover:text-primary transition-colors">
-                      ${this.esc(r.recipe_title || 'Untitled recipe')}
-                    </h2>
-                    <span class="text-small shrink-0 font-medium text-primary">Open →</span>
-                  </div>
-
-                  ${r.description ? `
-                    <p class="text-body text-stone-700 mt-2 line-clamp-3">
-                      ${this.esc(r.description)}
-                    </p>
-                  ` : ''}
-                </div>
-
-                <div class="mt-5 pt-3 border-t border-stone-300/60 space-y-3">
-                  <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-small">
-                    <span>Total: <strong class="text-ink">${r.total_time_min \vert{}\vert{} 0} min</strong></span>${r.servings ? `<span>• Servings: <strong class="text-ink">${r.servings}</strong></span>` : ''}
-                    ${r.difficulty ? `<span>• Difficulty: <strong class="text-ink">${r.difficulty}/5</strong></span>` : ''}
-                  </div>
-
-                  ${r.tags.length > 0 ? `
-                    <div class="flex flex-wrap gap-1.5">
-                      ${r.tags.map(t => `
-                        <span class="px-3 py-0.5 rounded-full text-xs font-medium bg-tagGreen text-white">
-                          ✓ ${this.esc(t.tag_name)}
-                        </span>
-                      `).join('')}
-                    </div>
-                  ` : ''}
-                </div>
-              </article>
-            `).join('')}
-          </div>
-        `}
-      </div>
-    `;
-  },
-
-  handleSearchInput(val) {
-    this.searchQuery = val;
-    this.render();
-    const input = document.getElementById('recipe-search-input');
-    if (input) {
-      input.focus();
-      input.setSelectionRange(input.value.length, input.value.length);
-    }
-  },
-
-  selectTagFilter(tagId) {
-    if (tagId === null) {
-      this.selectedTagFilterId = null;
-    } else {
-      this.selectedTagFilterId = this.selectedTagFilterId === tagId ? null : tagId;
-    }
-    this.render();
-  },
-
-  resetFilters() {
-    this.searchQuery = '';
-    this.selectedTagFilterId = null;
-    this.render();
-  },
-
-  /* =====================================================================
-   * VIEW 2: FULL-SCREEN DESKTOP IDEAS WORKSPACE
-   * ===================================================================== */
-  buildIdeasListColumnHTML() {
-    const ideas = IdeasManager.getAllIdeas();
-
-    return `
-      <div class="space-y-10">
-        <div class="flex flex-wrap items-end justify-between gap-4 pb-6 border-b border-stone-300/80">
-          <div>
-            <h1 class="text-heading !text-3xl">Cooking Ideas</h1>
-            <p class="text-small mt-1">Click any idea title to view or edit its note, or turn it into a recipe</p>
-          </div>
-          <span class="autosave-indicator text-small">Saved automatically</span>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-          
-          <!-- Left Column: Open Quick Capture Form -->
-          <div class="lg:col-span-4 space-y-4 lg:sticky lg:top-28 pb-6 lg:pb-0 border-b lg:border-b-0 lg:border-r border-stone-300/70 lg:pr-8">
-            <h2 class="text-heading">Save a new idea</h2>
-            <div>
-              <label for="new-idea-title" class="text-small block mb-1">Idea title</label>
-              <input id="new-idea-title" type="text" class="recipme-input" 
-                     placeholder="e.g., Honey chipotle chicken">
-            </div>
-            <div>
-              <label for="new-idea-note" class="text-small block mb-1">Idea note (copied into recipe description)</label>
-              <textarea id="new-idea-note" rows="3" class="recipme-input"
-                        placeholder="e.g., Try with lime and garlic, maybe over rice."></textarea>
-            </div>
-            <button onclick="UI.handleSaveNewIdea()" class="btn-main w-full">
-              Save idea
-            </button>
-          </div>
-
-          <!-- Right Column: Saved Ideas (Title only until clicked) -->
-          <div class="lg:col-span-8 divide-y divide-stone-300/80 border-t border-b border-stone-300/80">
-            ${ideas.length === 0 ? `
-              <div class="py-12 text-center">
-                <p class="text-body text-muted">No cooking ideas saved yet. Add your first idea on the left!</p>
-              </div>
-            ` : ideas.map(idea => {
-              const isExpanded = this.activeIdeaId === idea.idea_id;
-              return `
-                <div class="py-5 transition-all">
-                  <div class="flex items-center justify-between gap-4">
-                    <button type="button"
-                            onclick="UI.toggleIdeaNote(${idea.idea_id})"
-                            class="flex-1 text-left flex items-center justify-between gap-4 group py-1 focus:outline-none">
-                      <span class="text-heading group-hover:text-primary transition-colors">
-                        ${this.esc(idea.idea_title || 'Untitled idea')}
-                      </span>
-                      <span class="text-small text-primary font-medium shrink-0">
-                        ${isExpanded ? 'Close note ▲' : 'View note ▼'}
-                      </span>
-                    </button>
-
-                    <!-- Kebab ⋮ Menu -->
-                    <div class="relative shrink-0">
-                      <button onclick="UI.toggleIdeaMenu(${idea.idea_id})" 
-                              class="btn-icon" 
-                              title="Idea menu">
-                        <span class="font-bold text-xl leading-none">⋮</span>
-                      </button>
-                      <div id="idea-menu-${idea.idea_id}" 
-                           class="hidden absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-20">
-                        <button onclick="UI.handleTurnIdeaIntoRecipe(${idea.idea_id})" 
-                                class="w-full text-left px-4 py-2.5 text-body hover:bg-gray-50 font-medium text-primary">
-                          Turn into Recipe
-                        </button>
-                        <button onclick="UI.openDeleteIdeaModal(${idea.idea_id})" 
-                                class="w-full text-left px-4 py-2.5 text-body hover:bg-red-50 text-danger">
-                          Delete
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  ${isExpanded ? `
-                    <div class="mt-5 pt-4 border-t border-stone-300/60 space-y-4">
-                      <div>
-                        <label class="text-small block mb-1">Idea title</label>
-                        <input type="text" 
-                               value="${this.esc(idea.idea_title)}"
-                               aria-label="Idea title"
-                               oninput="IdeasManager.updateIdea(${idea.idea_id}, { idea_title: this.value })"
-                               class="recipme-input font-semibold">
-                      </div>
-                      <div>
-                        <label class="text-small block mb-1">Idea note</label>
-                        <textarea rows="3"
-                                  aria-label="Idea note"
-                                  oninput="IdeasManager.updateIdea(${idea.idea_id}, { idea_note: this.value })"
-                                  class="recipme-input">${this.esc(idea.idea_note)}</textarea>
-                      </div>
-                      <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-                        <span class="text-small">Automatically copies title & note into a new recipe</span>
-                        <button onclick="UI.handleTurnIdeaIntoRecipe(${idea.idea_id})" 
-                                class="btn-main !min-h-[42px] !py-2 !px-5">
-                          Turn into Recipe →
-                        </button>
-                      </div>
-                    </div>
-                  ` : ''}
-                </div>
-              `;
-            }).join('')}
-          </div>
-
-        </div>
-      </div>
-    `;
-  },
-
-  toggleIdeaNote(ideaId) {
-    const id = Number(ideaId);
-    this.activeIdeaId = (this.activeIdeaId === id) ? null : id;
-    this.render();
-  },
-
-  handleSaveNewIdea() {
-    const titleInput = document.getElementById('new-idea-title');
-    const noteInput = document.getElementById('new-idea-note');
-    const titleVal = titleInput ? titleInput.value.trim() : '';
-    const noteVal = noteInput ? noteInput.value.trim() : '';
-    if (!titleVal && !noteVal) return;
-
-    IdeasManager.createIdea(noteVal || titleVal, titleVal);
-    if (titleInput) titleInput.value = '';
-    if (noteInput) noteInput.value = '';
-    this.render();
-  },
-
-  toggleIdeaMenu(ideaId) {
-    const menu = document.getElementById(`idea-menu-${ideaId}`);
-    if (menu) menu.classList.toggle('hidden');
-  },
-
-  /* =====================================================================
-   * VIEW 3: FULL-WIDTH DESKTOP RECIPE EDITOR
-   * ===================================================================== */
-  buildRecipeEditorCardHTML(recipeId) {
-    const recipe = RecipeManager.getHydratedRecipe(recipeId);
-    if (!recipe) {
-      return `<p class="text-body">Recipe not found.</p>`;
-    }
-    const allTags = StorageService.db.tag;
-    const headingTitle = this.isNewRecipeMode ? 'New recipe' : 'Edit recipe';
-
-    return `
-      <div class="space-y-6 sm:space-y-8">
-        <div class="flex flex-wrap items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-5 border-b border-stone-300/80">
-          <div class="flex items-center gap-3 sm:gap-4 min-w-0">
-            <button type="button" onclick="UI.switchTab('recipes')" class="btn-secondary !px-3.5 sm:!px-4 !py-2 shrink-0">
-              <span>←</span>
-              <span>Recipes</span>
-            </button>
-            <h1 class="text-heading !text-xl sm:!text-3xl truncate">${headingTitle}</h1>
-          </div>
-
-          <div class="flex items-center gap-2.5 sm:gap-4 ml-auto">
-            <span class="autosave-indicator text-small">Saved automatically</span>
-
-            <div class="relative">
-              <button type="button" onclick="UI.toggleEditorMenu()" class="btn-icon" title="Recipe menu">
-                <span class="font-bold text-xl leading-none">⋮</span>
-              </button>
-              <div id="editor-kebab-menu" class="hidden absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-30">
-                <button type="button" onclick="UI.openRecipeView(${recipe.recipe_id})" class="w-full text-left px-4 py-2.5 text-body hover:bg-gray-50">
-                  View Recipe
-                </button>
-                <button type="button" onclick="UI.handleDuplicateRecipe(${recipe.recipe_id})" class="w-full text-left px-4 py-2.5 text-body hover:bg-gray-50">
-                  Duplicate
-                </button>
-                <hr class="my-1 border-gray-100">
-                <button type="button" onclick="UI.openDeleteRecipeModal(${recipe.recipe_id})" class="w-full text-left px-4 py-2.5 text-body hover:bg-red-50 text-danger font-medium">
-                  Delete
-                </button>
-              </div>
-            </div>
-
-            <button type="button" onclick="UI.openRecipeView(${recipe.recipe_id})" class="btn-main !min-h-[44px] !py-2 !px-6 hidden sm:inline-flex">
-              Done
-            </button>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-
-          <!-- LEFT COLUMN -->
-          <div class="lg:col-span-5 space-y-6">
-            <div class="space-y-4">
-              <div>
-                <label for="field-recipe-title" class="text-small block mb-1">Recipe title</label>
-                <input id="field-recipe-title" type="text" 
-                       class="recipme-input font-semibold" 
-                       placeholder="e.g., Honey chipotle chicken"
-                       value="${this.esc(recipe.recipe_title)}"
-                       oninput="RecipeManager.updateRecipeField(${recipe.recipe_id}, 'recipe_title', this.value)">
-              </div>
-
-              <div>
-                <label for="field-recipe-desc" class="text-small block mb-1">Description</label>
-                <textarea id="field-recipe-desc" rows="3" 
-                          class="recipme-input"
-                          placeholder="Short description or notes..."
-                          oninput="RecipeManager.updateRecipeField(${recipe.recipe_id}, 'description', this.value)">${this.esc(recipe.description)}</textarea>${recipe.source_idea_id ? `
-                  <p class="text-small mt-1">Copied from your idea</p>
-                ` : ''}
-              </div>
-            </div>
-
-            <div class="pt-2 border-t border-stone-300/60">
-              <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div>
-                  <label for="field-prep-time" class="text-small block mb-1">Prep time</label>
-                  <div class="relative">
-                    <input id="field-prep-time" type="number" min="0" inputmode="numeric"
-                           class="recipme-input pr-12" 
-                           placeholder="15"
-                           value="${recipe.prep_time_min !== null ? recipe.prep_time_min : ''}"
-                           oninput="UI.handleTimeChange(${recipe.recipe_id}, 'prep_time_min', this.value)">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-small pointer-events-none">min</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label for="field-cook-time" class="text-small block mb-1">Cook time</label>
-                  <div class="relative">
-                    <input id="field-cook-time" type="number" min="0" inputmode="numeric"
-                           class="recipme-input pr-12" 
-                           placeholder="20"
-                           value="${recipe.cook_time_min !== null ? recipe.cook_time_min : ''}"
-                           oninput="UI.handleTimeChange(${recipe.recipe_id}, 'cook_time_min', this.value)">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-small pointer-events-none">min</span>
-                  </div>
-                </div>
-
-                <div class="col-span-2 sm:col-span-1">
-                  <label for="field-servings" class="text-small block mb-1">Servings</label>
-                  <input id="field-servings" type="number" min="1" inputmode="numeric"
-                         class="recipme-input" 
-                         placeholder="4"
-                         value="${recipe.servings !== null ? recipe.servings : ''}"
-                         oninput="RecipeManager.updateRecipeField(${recipe.recipe_id}, 'servings', this.value ? parseInt(this.value, 10) : null)">
-                </div>
-              </div>
-              <p id="total-time-display" class="text-small mt-2">
-                Total time: ${recipe.total_time_min} min
-              </p>
-            </div>
-
-            <div class="pt-2 border-t border-stone-300/60">
-              <label class="text-small block mb-2">Difficulty (1 = Easy, 5 = Hard)</label>
-              <div class="flex flex-wrap items-center gap-3">
-                ${[1, 2, 3, 4, 5].map(num => {
-                  const isSelected = Number(recipe.difficulty) === num;
-                  return `
-                    <button type="button"
-                            onclick="UI.handleDifficultySelect(${recipe.recipe_id}, ${num})"
-                            class="chip-difficulty ${isSelected ? 'selected' : ''}">
-                      ${num}
-                    </button>
-                  `;
-                }).join('')}
-              </div>
-            </div>
-
-            <div class="pt-2 border-t border-stone-300/60">
-              <label class="text-small block mb-2">Tags</label>
-              <div class="flex flex-wrap gap-2">
-                ${allTags.map(tag => {
-                  const isSelected = recipe.tagIds.includes(tag.tag_id);
-                  return `
-                    <button type="button"
-                            onclick="UI.handleToggleRecipeTag(${recipe.recipe_id}, ${tag.tag_id})"
-                            class="chip ${isSelected ? 'selected' : ''}">
-                      ${isSelected ? '<span>✓</span>' : ''}
-                      <span>${this.esc(tag.tag_name)}</span>
-                    </button>
-                  `;
-                }).join('')}
-
-                <button type="button"
-                        onclick="UI.showNewTagInput()"
-                        class="chip border-dashed">
-                  + New tag
-                </button>
-              </div>
-
-              <div id="new-tag-form" class="hidden mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <input id="new-tag-input" type="text" class="recipme-input !py-2 flex-1" 
-                       placeholder="Type new tag (e.g., Quick, Spicy)..."
-                       onkeydown="if(event.key==='Enter'){event.preventDefault();UI.handleCreateNewTag(${recipe.recipe_id});}">
-                <button type="button" onclick="UI.handleCreateNewTag(${recipe.recipe_id})" class="btn-main !min-h-[44px] !py-2 !px-5 shrink-0">
-                  Add
-                </button>
-              </div>
-            </div>
-
-            <div class="space-y-5 pt-4 border-t border-stone-300/60">
-              <div>
-                <label for="field-personal-notes" class="text-heading !text-[18px] block mb-1">Personal Notes</label>
-                <p class="text-small mb-2">Your own cooking tips (e.g., "Stir the whole time. Don't walk away.")</p>
-                <textarea id="field-personal-notes" rows="2" 
-                          class="recipme-input"
-                          placeholder="Add your own family tips or reminders..."
-                          oninput="RecipeManager.updateRecipeField(${recipe.recipe_id}, 'personal_notes', this.value)">${this.esc(recipe.personal_notes)}</textarea>
-              </div>
-
-              <div>
-                <label class="text-heading !text-[18px] block mb-2">Finished Dish Photo</label>
-                ${recipe.photo_path ? `
-                  <div class="relative rounded-xl overflow-hidden border border-stone-300 mb-3">
-                    <img src="${this.esc(recipe.photo_path)}" alt="Finished dish" class="w-full h-52 object-cover">
-                    <button type="button" 
-                            onclick="UI.handleRemovePhoto(${recipe.recipe_id})"
-                            class="absolute top-3 right-3 bg-white/95 text-danger px-3 py-1.5 rounded-lg text-xs font-semibold shadow">
-                      Remove Photo
-                    </button>
-                  </div>
-                ` : ''}
-                <div class="flex flex-wrap items-center gap-2.5">
-                  <label class="btn-secondary cursor-pointer">
-                    <span>📷 + Add Photo</span>
-                    <input type="file" accept="image/*" class="hidden" onchange="UI.handlePhotoUpload(event, ${recipe.recipe_id})">
-                  </label>
-                  ${!recipe.photo_path ? `
-                    <button type="button" onclick="UI.handleSamplePhoto(${recipe.recipe_id})" class="btn-secondary !text-sm text-muted">
-                      Use Sample Dish Photo
-                    </button>
-                  ` : ''}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- RIGHT COLUMN -->
-          <div class="lg:col-span-7 space-y-8 sm:space-y-10 pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-stone-300/70 lg:pl-12">
-            
-            <div class="space-y-4">
-              <h2 class="text-heading">Ingredients</h2>
-              
-              ${recipe.ingredients.length === 0 ? `
-                <p class="text-small py-2">No ingredients added yet. Type an ingredient below.</p>
-              ` : `
-                <ul class="divide-y divide-stone-300/70 border-t border-b border-stone-300/70">
-                  ${recipe.ingredients.map(ing => `
-                    <li class="py-3 flex items-center justify-between gap-3">
-                      <span class="text-body flex-1 min-w-0">${this.esc(ing.formatted)}</span>
-                      <button type="button"
-                              onclick="UI.handleRemoveIngredient(${recipe.recipe_id},${ing.ingredient_id})"
-                              class="w-10 h-10 shrink-0 rounded-lg text-muted hover:text-danger hover:bg-stone-200/60 flex items-center justify-center text-xl"
-                              title="Remove ingredient">
-                        ×
-                      </button>
-                    </li>
-                  `).join('')}
-                </ul>
-              `}
-
-              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
-                <input id="add-ingredient-input" type="text" 
-                       class="recipme-input flex-1"
-                       placeholder="Type amount and ingredient (e.g., 2 lb chicken thighs)"
-                       onkeydown="if(event.key==='Enter'){event.preventDefault();UI.handleAddIngredient(${recipe.recipe_id});}">
-                <button type="button" 
-                        onclick="UI.handleAddIngredient(${recipe.recipe_id})" 
-                        class="btn-secondary shrink-0">
-                  + Add ingredient
-                </button>
-              </div>
-            </div>
-
-            <div class="space-y-4 pt-6 border-t border-stone-300/70">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="text-heading">How to Make It</h2>
-                <span class="text-small">Drag steps or use ▲/▼ to reorder</span>
-              </div>
-
-              <div id="steps-list" class="divide-y divide-stone-300/70 border-t border-b border-stone-300/70">
-                ${recipe.steps.length === 0 ? `
-                  <p class="text-small py-4">No steps added yet. Add your first step below.</p>
-                ` : recipe.steps.map((step, idx) => `
-                  <div draggable="true"
-                       ondragstart="UI.onStepDragStart(event, ${idx})"
-                       ondragover="UI.onStepDragOver(event)"
-                       ondrop="UI.onStepDrop(event, ${recipe.recipe_id}, ${idx})"
-                       class="flex items-start gap-2.5 sm:gap-3 py-3.5">
-                    <span class="font-bold text-body min-w-[26px] pt-2 text-primary select-none cursor-grab shrink-0" title="Drag to reorder">
-                      ${step.step_number}.
-                    </span>
-                    <textarea rows="2"
-                              oninput="RecipeManager.updateStepInstruction(${step.step_id}, this.value)"
-                              class="flex-1 min-w-0 recipme-input resize-none">${this.esc(step.instruction)}</textarea>
-                    <div class="flex flex-col items-center gap-1 pt-0.5 shrink-0">
-                      <button type="button" 
-                              onclick="UI.moveStep(${recipe.recipe_id}, ${idx}, ${idx - 1})"
-                              ${idx === 0 ? 'disabled class="opacity-25 pointer-events-none text-xs p-1.5"' : 'class="text-xs p-1.5 rounded hover:bg-stone-200/70 text-muted"'}
-                              title="Move step up">▲</button>
-                      <button type="button" 
-                              onclick="UI.moveStep(${recipe.recipe_id}, ${idx}, ${idx + 1})"
-                              ${idx === recipe.steps.length - 1 ? 'disabled class="opacity-25 pointer-events-none text-xs p-1.5"' : 'class="text-xs p-1.5 rounded hover:bg-stone-200/70 text-muted"'}
-                              title="Move step down">▼</button>
-                      <button type="button"
-                              onclick="UI.handleRemoveStep(${recipe.recipe_id}, ${step.step_id})"
-                              class="text-muted hover:text-danger text-lg px-2 py-0.5"
-                              title="Remove step">×</button>
-                    </div>
-                  </div>
-                `).join('')}
-              </div>
-
-              <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
-                <input id="add-step-input" type="text" 
-                       class="recipme-input flex-1"
-                       placeholder="Type next step (e.g., Marinate the chicken for 10 minutes.)"
-                       onkeydown="if(event.key==='Enter'){event.preventDefault();UI.handleAddStep(${recipe.recipe_id});}">
-                <button type="button" 
-                        onclick="UI.handleAddStep(${recipe.recipe_id})" 
-                        class="btn-secondary shrink-0">
-                  + Add step
-                </button>
-              </div>
-            </div>
-
-            <div class="pt-6 border-t border-stone-300/70 flex justify-end">
-              <button type="button" onclick="UI.openRecipeView(${recipe.recipe_id})" class="btn-main w-full sm:w-auto sm:min-w-[220px]">
-                Done
-              </button>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    `;
-  },
-
-  toggleEditorMenu() {
-    const menu = document.getElementById('editor-kebab-menu');
-    if (menu) menu.classList.toggle('hidden');
-  },
-
-  handleTimeChange(recipeId, fieldName, rawVal) {
-    const num = rawVal !== '' ? Math.max(0, parseInt(rawVal, 10) || 0) : null;
-    RecipeManager.updateRecipeField(recipeId, fieldName, num);
-    const r = RecipeManager.getHydratedRecipe(recipeId);
-    const totalEl = document.getElementById('total-time-display');
-    if (totalEl && r) {
-      totalEl.textContent = `Total time: ${r.total_time_min} min`; } },  handleDifficultySelect(recipeId, rating) { const r = StorageService.db.recipe.find(item => item.recipe_id === Number(recipeId)); const nextVal = r && r.difficulty === rating ? null : rating; RecipeManager.updateRecipeField(recipeId, 'difficulty', nextVal); this.render(); },  handleToggleRecipeTag(recipeId, tagId) { RecipeManager.toggleRecipeTag(recipeId, tagId); this.render(); },  showNewTagInput() { const form = document.getElementById('new-tag-form'); const input = document.getElementById('new-tag-input'); if (form) { form.classList.toggle('hidden'); if (!form.classList.contains('hidden') && input) input.focus(); } },  handleCreateNewTag(recipeId) { const input = document.getElementById('new-tag-input'); if (!input \vert{}\vert{} !input.value.trim()) return; RecipeManager.addCustomTag(input.value.trim(), recipeId); this.render(); },  handleAddIngredient(recipeId) { const input = document.getElementById('add-ingredient-input'); if (!input \vert{}\vert{} !input.value.trim()) return; RecipeManager.addIngredientToRecipe(recipeId, input.value); this.render(); const refreshedInput = document.getElementById('add-ingredient-input'); if (refreshedInput) refreshedInput.focus(); },  handleRemoveIngredient(recipeId, ingredientId) { RecipeManager.removeIngredientFromRecipe(recipeId, ingredientId); this.render(); },  handleAddStep(recipeId) { const input = document.getElementById('add-step-input'); if (!input \vert{}\vert{} !input.value.trim()) return; RecipeManager.addStepToRecipe(recipeId, input.value); this.render(); const refreshedInput = document.getElementById('add-step-input'); if (refreshedInput) refreshedInput.focus(); },  handleRemoveStep(recipeId, stepId) { RecipeManager.removeStep(recipeId, stepId); this.render(); },  moveStep(recipeId, fromIndex, toIndex) { RecipeManager.reorderStep(recipeId, fromIndex, toIndex); this.render(); },  onStepDragStart(event, index) { this.draggedStepIndex = index; event.currentTarget.classList.add('step-dragging'); },  onStepDragOver(event) { event.preventDefault(); },  onStepDrop(event, recipeId, targetIndex) { event.preventDefault(); if (this.draggedStepIndex !== null && this.draggedStepIndex !== targetIndex) { RecipeManager.reorderStep(recipeId, this.draggedStepIndex, targetIndex); this.draggedStepIndex = null; this.render(); } },  handlePhotoUpload(event, recipeId) { const file = event.target.files?.[0]; if (!file) return; const reader = new FileReader(); reader.onload = (e) => { RecipeManager.updateRecipeField(recipeId, 'photo_path', e.target.result); this.render(); }; reader.readAsDataURL(file); },  handleSamplePhoto(recipeId) { const r = RecipeManager.getHydratedRecipe(recipeId); const title = encodeURIComponent(r?.recipe_title \vert{}\vert{} 'Finished Dish'); const sampleUrl = `https://placehold.co/800x450/C2410C/FFFFFF?text=${title}`;
-    RecipeManager.updateRecipeField(recipeId, 'photo_path', sampleUrl);
-    this.render();
-  },
-
-  handleRemovePhoto(recipeId) {
-    RecipeManager.updateRecipeField(recipeId, 'photo_path', '');
-    this.render();
-  },
-
-  handleDuplicateRecipe(recipeId) {
-    const copy = RecipeManager.duplicateRecipe(recipeId);
-    if (copy) {
-      this.openRecipeEditor(copy.recipe_id, false);
-    }
-  },
-
-  /* =====================================================================
-   * VIEW 4: FULL-WIDTH DESKTOP RECIPE READING VIEW
-   * ===================================================================== */
-  buildRecipeDetailCardHTML(recipeId) {
-    const recipe = RecipeManager.getHydratedRecipe(recipeId);
-    if (!recipe) {
-      return `<p class="text-body">Recipe not found.</p>`;
-    }
-
-    return `
-      <div class="space-y-6 sm:space-y-8">
-        
-        <div class="flex flex-wrap items-center justify-between gap-3 sm:gap-4 pb-4 sm:pb-5 border-b border-stone-300/80">
-          <button onclick="UI.switchTab('recipes')" class="btn-secondary !px-3.5 sm:!px-4 !py-2">
-            <span>←</span>
-            <span>Recipes</span>
-          </button>
-
-          <span class="text-small hidden md:flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-tagGreen inline-block"></span>
-            <span>Screen stays awake while cooking</span>
-          </span>
-
-          <div class="flex items-center gap-2 sm:gap-2.5 ml-auto md:ml-0">
-            <button onclick="UI.openRecipeEditor(${recipe.recipe_id}, false)" class="btn-main !min-h-[42px] !px-4 sm:!px-5 !py-2">
-              Edit Recipe
-            </button>
-            <div class="relative">
-              <button onclick="UI.toggleDetailMenu()" class="btn-icon" title="More options">
-                <span class="font-bold text-xl leading-none">⋮</span>
-              </button>
-              <div id="detail-kebab-menu" class="hidden absolute right-0 mt-1.5 w-48 bg-white rounded-xl shadow-lg border border-gray-200 py-1.5 z-30">
-                <button onclick="UI.openRecipeEditor(${recipe.recipe_id}, false)" class="w-full text-left px-4 py-2.5 text-body hover:bg-gray-50">
-                  Edit
-                </button>
+    this.

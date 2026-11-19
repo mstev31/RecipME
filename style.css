@@ -226,3 +226,194 @@ body {
   border: 1.5px dashed #C2410C;
   background-color: #FFF7ED;
 }
+/* =====================================================================
+ * SETTINGS TOGGLE SWITCHES
+ * ===================================================================== */
+.settings-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 52px;
+  height: 30px;
+  border-radius: 9999px;
+  background-color: #D1D5DB;
+  border: none;
+  padding: 3px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.settings-switch[aria-checked="true"] {
+  background-color: #C2410C;
+}
+
+.settings-switch-thumb {
+  width: 24px;
+  height: 24px;
+  border-radius: 9999px;
+  background-color: #FFFFFF;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+  transform: translateX(0);
+}
+
+.settings-switch[aria-checked="true"] .settings-switch-thumb {
+  transform: translateX(22px);
+}
+
+/* =====================================================================
+ * DARK MODE THEME (Warm Charcoal Notebook Palette)
+ * ===================================================================== */
+body.dark-mode {
+  background-color: #171412;
+  color: #F5EFE8;
+}
+
+body.dark-mode .bg-cream,
+body.dark-mode .bg-cream\/95 {
+  background-color: #171412 !important;
+}
+
+body.dark-mode .bg-white,
+body.dark-mode .bg-white\/95,
+body.dark-mode .bg-white\/90,
+body.dark-mode .bg-white\/80 {
+  background-color: #24201D !important;
+}
+
+body.dark-mode .hover\:bg-white:hover {
+  background-color: #2E2925 !important;
+}
+
+body.dark-mode .hover\:bg-gray-50:hover,
+body.dark-mode .hover\:bg-stone-200\/60:hover,
+body.dark-mode .hover\:bg-stone-200\/70:hover {
+  background-color: #2E2925 !important;
+}
+
+body.dark-mode .hover\:bg-red-50:hover {
+  background-color: rgba(185, 28, 28, 0.22) !important;
+}
+
+body.dark-mode .bg-stone-200 {
+  background-color: #2E2925 !important;
+}
+
+body.dark-mode .bg-stone-300 {
+  background-color: #3A342F !important;
+}
+
+body.dark-mode .bg-red-50 {
+  background-color: rgba(185, 28, 28, 0.18) !important;
+}
+
+body.dark-mode .text-heading,
+body.dark-mode .text-body,
+body.dark-mode .text-ink,
+body.dark-mode .text-stone-800,
+body.dark-mode .text-stone-700 {
+  color: #F5EFE8 !important;
+}
+
+body.dark-mode .text-small,
+body.dark-mode .text-muted {
+  color: #A8A29E !important;
+}
+
+body.dark-mode .text-primary {
+  color: #F97316 !important;
+}
+
+body.dark-mode .text-danger {
+  color: #F87171 !important;
+}
+
+body.dark-mode .hover\:text-ink:hover {
+  color: #FFFFFF !important;
+}
+
+body.dark-mode .border-stone-300,
+body.dark-mode .border-stone-300\/90,
+body.dark-mode .border-stone-300\/80,
+body.dark-mode .border-stone-300\/70,
+body.dark-mode .border-stone-300\/60,
+body.dark-mode .border-stone-200\/80,
+body.dark-mode .border-gray-200,
+body.dark-mode .border-gray-100 {
+  border-color: #3A342F !important;
+}
+
+body.dark-mode .border-stone-800\/80 {
+  border-color: #575049 !important;
+}
+
+body.dark-mode .hover\:border-primary:hover {
+  border-color: #EA580C !important;
+}
+
+body.dark-mode .divide-stone-300\/80 > :not([hidden]) ~ :not([hidden]),
+body.dark-mode .divide-stone-300\/70 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #3A342F !important;
+}
+
+body.dark-mode .recipme-input {
+  background-color: #1F1B18;
+  color: #F5EFE8;
+  border-color: #443D37;
+}
+
+body.dark-mode .recipme-input::placeholder {
+  color: #8C847D;
+}
+
+body.dark-mode .recipme-input:focus {
+  border-color: #EA580C !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.25);
+}
+
+body.dark-mode .btn-secondary,
+body.dark-mode .btn-icon {
+  background-color: #24201D;
+  color: #F5EFE8;
+  border-color: #443D37;
+}
+
+body.dark-mode .btn-secondary:hover,
+body.dark-mode .btn-icon:hover {
+  background-color: #2E2925;
+  border-color: #6B625A;
+}
+
+body.dark-mode .chip,
+body.dark-mode .chip-difficulty {
+  background-color: #24201D;
+  color: #F5EFE8;
+  border-color: #443D37;
+}
+
+body.dark-mode .chip:hover:not(.selected),
+body.dark-mode .chip-difficulty:hover:not(.selected) {
+  background-color: #2E2925;
+  border-color: #6B625A;
+}
+
+body.dark-mode .chip.selected,
+body.dark-mode .chip-difficulty.selected {
+  background-color: #3F7D3A;
+  border-color: #3F7D3A;
+  color: #FFFFFF;
+}
+
+body.dark-mode .settings-switch {
+  background-color: #443D37;
+}
+
+body.dark-mode .settings-switch[aria-checked="true"] {
+  background-color: #EA580C;
+}
+
+body.dark-mode .step-dragging {
+  background-color: #2D221A;
+  border-color: #EA580C;
+}

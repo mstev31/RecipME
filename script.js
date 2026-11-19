@@ -1024,7 +1024,7 @@ const UI = {
             <div class="relative w-full sm:w-96">
               <input id="recipe-search-input" type="text"
                      class="recipme-input pr-10"
-                     placeholder="Search recipes or ingredients (e.g., lime, gumbo)..."
+                     placeholder="Search recipes or ingredients..."
                      value="${this.esc(this.searchQuery)}"
                      oninput="UI.handleSearchInput(this.value)">
               ${this.searchQuery ? `
@@ -1334,7 +1334,6 @@ const UI = {
                 <label for="field-recipe-title" class="text-small block mb-1">Recipe title</label>
                 <input id="field-recipe-title" type="text"
                        class="recipme-input font-semibold"
-                       placeholder="e.g., Honey chipotle chicken"
                        value="${this.esc(recipe.recipe_title)}"
                        oninput="RecipeManager.updateRecipeField(${recipe.recipe_id}, 'recipe_title', this.value)">
               </div>
@@ -1358,7 +1357,6 @@ const UI = {
                   <div class="relative">
                     <input id="field-prep-time" type="number" min="0" inputmode="numeric"
                            class="recipme-input pr-12"
-                           placeholder="15"
                            value="${recipe.prep_time_min !== null ? recipe.prep_time_min : ''}"
                            oninput="UI.handleTimeChange(${recipe.recipe_id}, 'prep_time_min', this.value)">
                     <span class="absolute right-3 top-1/2 -translate-y-1/2 text-small pointer-events-none">min</span>
@@ -1370,7 +1368,6 @@ const UI = {
                   <div class="relative">
                     <input id="field-cook-time" type="number" min="0" inputmode="numeric"
                            class="recipme-input pr-12"
-                           placeholder="20"
                            value="${recipe.cook_time_min !== null ? recipe.cook_time_min : ''}"
                            oninput="UI.handleTimeChange(${recipe.recipe_id}, 'cook_time_min', this.value)">
                     <span class="absolute right-3 top-1/2 -translate-y-1/2 text-small pointer-events-none">min</span>
@@ -1381,7 +1378,6 @@ const UI = {
                   <label for="field-servings" class="text-small block mb-1">Servings</label>
                   <input id="field-servings" type="number" min="1" inputmode="numeric"
                          class="recipme-input"
-                         placeholder="4"
                          value="${recipe.servings !== null ? recipe.servings : ''}"
                          oninput="RecipeManager.updateRecipeField(${recipe.recipe_id}, 'servings', this.value ? parseInt(this.value, 10) : null)">
                 </div>
@@ -1431,7 +1427,7 @@ const UI = {
 
               <div id="new-tag-form" class="hidden mt-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                 <input id="new-tag-input" type="text" class="recipme-input !py-2 flex-1"
-                       placeholder="Type new tag (e.g., Quick, Spicy)..."
+                       placeholder="Type new tag..."
                        onkeydown="if(event.key==='Enter'){event.preventDefault();UI.handleCreateNewTag(${recipe.recipe_id});}">
                 <button type="button" onclick="UI.handleCreateNewTag(${recipe.recipe_id})" class="btn-main !min-h-[44px] !py-2 !px-5 shrink-0">
                   Add
@@ -1496,7 +1492,7 @@ const UI = {
               <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
                 <input id="add-ingredient-input" type="text"
                        class="recipme-input flex-1"
-                       placeholder="Type amount and ingredient (e.g., 2 lb chicken thighs)"
+                       placeholder="Type amount and ingredient..."
                        onkeydown="if(event.key==='Enter'){event.preventDefault();UI.handleAddIngredient(${recipe.recipe_id});}">
                 <button type="button"
                         onclick="UI.handleAddIngredient(${recipe.recipe_id})"
@@ -1548,7 +1544,7 @@ const UI = {
               <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-1">
                 <input id="add-step-input" type="text"
                        class="recipme-input flex-1"
-                       placeholder="Type next step (e.g., Marinate the chicken for 10 minutes.)"
+                       placeholder="Type next step..."
                        onkeydown="if(event.key==='Enter'){event.preventDefault();UI.handleAddStep(${recipe.recipe_id});}">
                 <button type="button"
                         onclick="UI.handleAddStep(${recipe.recipe_id})"

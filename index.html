@@ -192,6 +192,10 @@
         </button>
 
         <div class="flex items-center gap-1.5 sm:gap-3 md:gap-4 flex-wrap justify-end">
+          <button onclick="UI.startNewBlankRecipe()" class="btn-main !min-h-[40px] sm:!min-h-[42px] !py-1.5 sm:!py-2 !px-3.5 sm:!px-4 !text-sm sm:!text-base hidden sm:inline-flex">
+            + New recipe
+          </button>
+
           <nav class="flex items-center gap-1 sm:gap-2">
             <button id="nav-tab-recipes" onclick="UI.switchTab('recipes')"
                     class="px-3 sm:px-4 py-2 rounded-xl font-medium text-sm sm:text-base transition flex items-center gap-2">
@@ -213,10 +217,6 @@
           </button>
 
           <div id="auth-header-slot"></div>
-
-          <button onclick="UI.startNewBlankRecipe()" class="btn-main !min-h-[40px] sm:!min-h-[42px] !py-1.5 sm:!py-2 !px-3.5 sm:!px-4 !text-sm sm:!text-base hidden sm:inline-flex">
-            + New recipe
-          </button>
         </div>
       </div>
     </header>
@@ -292,6 +292,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=9"></script>
+  <script src="script.js?v=10"></script>
 </body>
 </html>

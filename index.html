@@ -110,7 +110,7 @@
       return false;
     };
   </script>
-  <link rel="stylesheet" href="style.css?v=8">
+  <link rel="stylesheet" href="style.css?v=9">
 </head>
 <body class="min-h-screen flex flex-col bg-cream text-ink">
 
@@ -125,11 +125,14 @@
         </div>
       </div>
 
-      <button type="button" onclick="UI.toggleLargeText()"
+      <button type="button" onclick="UI.openSettingsModal()"
               class="px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-sm font-medium text-ink min-h-[42px] flex items-center gap-1.5 transition"
-              title="Make text larger for easier reading">
-        <span class="font-bold text-base">Aa</span>
-        <span class="hidden sm:inline">Larger text</span>
+              title="Display settings (Dark mode & Larger text)">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span class="hidden sm:inline">Settings</span>
       </button>
     </div>
 
@@ -206,11 +209,14 @@
 
           <div class="h-6 w-px bg-stone-300 hidden sm:block"></div>
 
-          <button id="btn-large-text" onclick="UI.toggleLargeText()"
+          <button id="btn-settings" type="button" onclick="UI.openSettingsModal()"
                   class="px-2.5 sm:px-3.5 py-2 rounded-xl border border-stone-300 bg-white/80 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-1.5 transition"
-                  title="Make text larger for easier reading while cooking">
-            <span class="font-bold text-sm sm:text-base">Aa</span>
-            <span id="large-text-label" class="hidden lg:inline">Larger text</span>
+                  title="Display settings (Dark mode & Larger text)">
+            <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+            <span class="hidden lg:inline">Settings</span>
           </button>
 
           <div id="auth-header-slot"></div>
@@ -236,6 +242,49 @@
         </div>
       </div>
     </footer>
+  </div>
+
+  <!-- SETTINGS MODAL -->
+  <div id="settings-modal" onclick="if(event.target===this) UI.closeSettingsModal()" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-cream rounded-2xl max-w-[430px] w-full p-6 shadow-xl border border-stone-300">
+      <div class="flex items-start justify-between gap-3 mb-2">
+        <h3 class="text-heading">Settings</h3>
+        <button type="button" onclick="UI.closeSettingsModal()" class="btn-icon !w-9 !h-9" title="Close">X</button>
+      </div>
+      <p class="text-small mb-5">
+        Customize how RecipME looks while you cook.
+      </p>
+
+      <div class="divide-y divide-stone-300/80 border-t border-b border-stone-300/80">
+        <div class="py-4 flex items-center justify-between gap-4">
+          <div>
+            <span class="text-body font-semibold block">Dark Mode</span>
+            <span class="text-small block">Easier on the eyes in dim kitchens</span>
+          </div>
+          <button type="button" id="toggle-dark-mode" role="switch" aria-checked="false" aria-label="Toggle Dark Mode"
+                  onclick="UI.toggleDarkMode()" class="settings-switch">
+            <span class="settings-switch-thumb"></span>
+          </button>
+        </div>
+
+        <div class="py-4 flex items-center justify-between gap-4">
+          <div>
+            <span class="text-body font-semibold block">Larger Text</span>
+            <span class="text-small block">Increase text size for easier reading</span>
+          </div>
+          <button type="button" id="toggle-large-text" role="switch" aria-checked="false" aria-label="Toggle Larger Text"
+                  onclick="UI.toggleLargeText()" class="settings-switch">
+            <span class="settings-switch-thumb"></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="mt-6 flex justify-end">
+        <button type="button" onclick="UI.closeSettingsModal()" class="btn-main w-full sm:w-auto sm:min-w-[120px]">
+          Done
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ACCOUNT MODAL -->
@@ -289,6 +338,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=10"></script>
+  <script src="script.js?v=11"></script>
 </body>
 </html>

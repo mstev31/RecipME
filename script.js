@@ -778,9 +778,11 @@ const UI = {
       <button type="button" onclick="UI.openAuthModal()"
               class="px-3 py-1.5 rounded-full border border-stone-300 bg-white/90 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-2 transition"
               title="Signed in as ${this.esc(user.name)} (${this.esc(user.email)}).">
-        <span class="w-6 h-6 rounded-full text-white text-xs font-bold flex items-center justify-center shrink-0"
-              style="background-color: ${user.badgeColor || '#C2410C'}">
-          ${this.esc(user.initials)}
+        <span class="w-6 h-6 rounded-full text-white flex items-center justify-center shrink-0"
+              style="background-color: ${user.badgeColor || '#C2410C'}" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
+          </svg>
         </span>
         <span class="hidden md:inline">${this.esc(user.name)}</span>
       </button>
@@ -1165,13 +1167,11 @@ const UI = {
             <h2 class="text-heading">Save a new idea</h2>
             <div>
               <label for="new-idea-title" class="text-small block mb-1">Idea title</label>
-              <input id="new-idea-title" type="text" class="recipme-input"
-                     placeholder="e.g., Honey chipotle chicken">
+              <input id="new-idea-title" type="text" class="recipme-input">
             </div>
             <div>
               <label for="new-idea-note" class="text-small block mb-1">Idea note (copied into recipe description)</label>
-              <textarea id="new-idea-note" rows="3" class="recipme-input"
-                        placeholder="e.g., Try with lime and garlic, maybe over rice."></textarea>
+              <textarea id="new-idea-note" rows="3" class="recipme-input"></textarea>
             </div>
             <button onclick="UI.handleSaveNewIdea()" class="btn-main w-full">
               Save idea
@@ -1442,7 +1442,7 @@ const UI = {
             <div class="space-y-5 pt-4 border-t border-stone-300/60">
               <div>
                 <label for="field-personal-notes" class="text-heading !text-[18px] block mb-1">Personal Notes</label>
-                <p class="text-small mb-2">Your own cooking tips (e.g., "Stir the whole time. Don't walk away.")</p>
+                <p class="text-small mb-2">Your own cooking tips</p>
                 <textarea id="field-personal-notes" rows="2"
                           class="recipme-input"
                           placeholder="Add your own family tips or reminders..."
@@ -1466,11 +1466,6 @@ const UI = {
                     <span>+ Add Photo</span>
                     <input type="file" accept="image/*" class="hidden" onchange="UI.handlePhotoUpload(event, ${recipe.recipe_id})">
                   </label>
-                  ${!recipe.photo_path ? `
-                    <button type="button" onclick="UI.handleSamplePhoto(${recipe.recipe_id})" class="btn-secondary !text-sm text-muted">
-                      Use Sample Dish Photo
-                    </button>
-                  ` : ''}
                 </div>
               </div>
             </div>
@@ -1513,7 +1508,7 @@ const UI = {
 
             <div class="space-y-4 pt-6 border-t border-stone-300/70">
               <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="text-heading">How to Make It</h2>
+                <h2 class="text-heading">Cooking Steps</h2>
                 <span class="text-small">Drag steps or use Up/Down to reorder</span>
               </div>
 
@@ -1679,14 +1674,6 @@ const UI = {
     reader.readAsDataURL(file);
   },
 
-  handleSamplePhoto(recipeId) {
-    const r = RecipeManager.getHydratedRecipe(recipeId);
-    const title = encodeURIComponent((r && r.recipe_title) || 'Finished Dish');
-    const sampleUrl = `https://placehold.co/800x450/C2410C/FFFFFF?text=${title}`;
-    RecipeManager.updateRecipeField(recipeId, 'photo_path', sampleUrl);
-    this.render();
-  },
-
   handleRemovePhoto(recipeId) {
     RecipeManager.updateRecipeField(recipeId, 'photo_path', '');
     this.render();
@@ -1822,7 +1809,7 @@ const UI = {
           </div>
 
           <div class="lg:col-span-8 pt-6 lg:pt-0 border-t lg:border-t-0 lg:border-l border-stone-300/70 lg:pl-12 space-y-4">
-            <h2 class="text-heading">How to Make It</h2>
+            <h2 class="text-heading">Cooking Steps</h2>
             ${recipe.steps.length === 0 ? `
               <p class="text-small">No instructions added yet.</p>
             ` : `

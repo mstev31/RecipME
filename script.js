@@ -718,12 +718,62 @@ const UI = {
   isNewRecipeMode: false,
   searchQuery: '',
   selectedTagFilterId: null,
+  PREFS_KEY: 'recipme_ui_prefs_v1',
   largeTextEnabled: false,
+  darkModeEnabled: false,
   draggedStepIndex: null,
 
   init() {
+    this.loadPreferences();
     StorageService.init();
     this.syncScreenVisibility();
+  },
+
+  loadPreferences() {
+    try {
+      const saved = localStorage.getItem(this.PREFS_KEY);
+      if (saved) {
+        const prefs = JSON.parse(saved);
+        this.darkModeEnabled = Boolean(prefs.darkModeEnabled);
+        this.largeTextEnabled = Boolean(prefs.largeTextEnabled);
+      }
+    } catch (e) {}
+    this.applyPreferences();
+  },
+
+  savePreferences() {
+    try {
+      localStorage.setItem(this.PREFS_KEY, JSON.stringify({
+        darkModeEnabled: this.darkModeEnabled,
+        largeTextEnabled: this.largeTextEnabled
+      }));
+    } catch (e) {}
+  },
+
+  applyPreferences() {
+    document.body.classList.toggle('dark-mode', this.darkModeEnabled);
+    document.body.classList.toggle('large-text-mode', this.largeTextEnabled);
+    const darkSwitch = document.getElementById('toggle-dark-mode');
+    if (darkSwitch) darkSwitch.setAttribute('aria-checked', String(this.darkModeEnabled));
+    const textSwitch = document.getElementById('toggle-large-text');
+    if (textSwitch) textSwitch.setAttribute('aria-checked', String(this.largeTextEnabled));
+  },
+
+  openSettingsModal() {
+    this.applyPreferences();
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.remove('hidden');
+  },
+
+  closeSettingsModal() {
+    const modal = document.getElementById('settings-modal');
+    if (modal) modal.classList.add('hidden');
+  },
+
+  toggleDarkMode() {
+    this.darkModeEnabled = !this.darkModeEnabled;
+    this.applyPreferences();
+    this.savePreferences();
   },
 
   syncScreenVisibility() {
@@ -911,12 +961,8 @@ const UI = {
 
   toggleLargeText() {
     this.largeTextEnabled = !this.largeTextEnabled;
-    document.body.classList.toggle('large-text-mode', this.largeTextEnabled);
-    const btn = document.getElementById('btn-large-text');
-    if (btn) {
-      btn.classList.toggle('border-primary', this.largeTextEnabled);
-      btn.classList.toggle('text-primary', this.largeTextEnabled);
-    }
+    this.applyPreferences();
+    this.savePreferences();
   },
 
   notifyAutosave() {
@@ -1883,6 +1929,14 @@ const UI = {
 };
 
 window.UI = UI;
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    UI.closeSettingsModal();
+    UI.closeAuthModal();
+    UI.closeDeleteModal();
+  }
+});
 
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => UI.init());

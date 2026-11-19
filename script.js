@@ -648,6 +648,27 @@ const RecipeManager = {
     StorageService.commit();
   },
 
+  isRecipeEmpty(recipeId) {
+    const r = this.getHydratedRecipe(recipeId);
+    if (!r) return false;
+    const hasText = Boolean(
+      (r.recipe_title && r.recipe_title.trim()) ||
+      (r.description && r.description.trim()) ||
+      (r.personal_notes && r.personal_notes.trim()) ||
+      (r.photo_path && r.photo_path.trim())
+    );
+    const hasMeta =
+      r.prep_time_min !== null ||
+      r.cook_time_min !== null ||
+      r.servings !== null ||
+      r.difficulty !== null;
+    const hasChildren =
+      r.ingredients.length > 0 ||
+      r.steps.length > 0 ||
+      r.tags.length > 0;
+    return !hasText && !hasMeta && !hasChildren;
+  },
+
   deleteRecipe(recipeId) {
     const rId = Number(recipeId);
     StorageService.db.recipe = StorageService.db.recipe.filter(r => r.recipe_id !== rId);
@@ -788,6 +809,7 @@ const UI = {
   },
 
   logoutToLoginScreen() {
+    this.cleanupEmptyActiveRecipe();
     this.closeAuthModal();
     StorageService.clearSession();
     ['landing-login-email', 'login-email', 'landing-login-password', 'login-password'].forEach(id => {
@@ -904,13 +926,25 @@ const UI = {
     });
   },
 
+  cleanupEmptyActiveRecipe() {
+    if (this.currentView === 'editor' && this.activeRecipeId !== null) {
+      if (RecipeManager.isRecipeEmpty(this.activeRecipeId)) {
+        RecipeManager.deleteRecipe(this.activeRecipeId);
+        return true;
+      }
+    }
+    return false;
+  },
+
   switchTab(tabName) {
+    this.cleanupEmptyActiveRecipe();
     this.currentView = tabName;
     this.render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
   openRecipeEditor(recipeId, isNew = false) {
+    this.cleanupEmptyActiveRecipe();
     this.activeRecipeId = Number(recipeId);
     this.isNewRecipeMode = isNew;
     this.currentView = 'editor';
@@ -919,6 +953,13 @@ const UI = {
   },
 
   openRecipeView(recipeId) {
+    if (this.currentView === 'editor' && RecipeManager.isRecipeEmpty(recipeId)) {
+      RecipeManager.deleteRecipe(recipeId);
+      this.currentView = 'recipes';
+      this.render();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
     this.activeRecipeId = Number(recipeId);
     this.isNewRecipeMode = false;
     this.currentView = 'recipe-view';

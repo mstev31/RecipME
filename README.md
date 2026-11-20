@@ -1,6 +1,6 @@
 # RecipME — Personal Recipe Notebook & Idea Keeper
 
-**Live Demo:** [https://recipme.mhsrockss.workers.dev/](https://recipme.mhsrockss.workers.dev/)
+**Live Demo:** [https://recipme.lsurecipme.workers.dev/](https://recipme.lsurecipme.workers.dev/)
 
 RecipME is a calm, ad-free personal recipe notebook and cooking idea keeper built for home cooks who want to capture meal sparks, preserve family recipes, and cook without clutter.
 
@@ -10,7 +10,7 @@ Built for **ISDS 4125: Analysis and Design of Information Systems (Fall 2026)** 
 
 ## Try the Live App (Demo Day Access)
 
-1. Open **[https://recipme.mhsrockss.workers.dev/](https://recipme.mhsrockss.workers.dev/)** on any phone, tablet, or desktop browser.
+1. Open **[https://recipme.lsurecipme.workers.dev/](https://recipme.lsurecipme.workers.dev/)** on any phone, tablet, or desktop browser.
 2. Click the **Demo Day Login** button to automatically prefill the presentation credentials (`demoday@recipme.app` / `RecipME2026!`).
 3. Click **Sign In** to explore your own isolated local sandbox.
 

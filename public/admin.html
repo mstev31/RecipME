@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecipME — Live Demo Day Dashboard</title>
+  <link rel="icon" type="image/jpeg" href="RecipME Logo.jpg">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#C2410C',
+            cream: '#FBF7F2',
+            ink: '#1F2937',
+            muted: '#6B7280',
+            tagGreen: '#3F7D3A',
+            danger: '#B91C1C'
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="style.css?v=12">
+</head>
+<body class="min-h-screen flex flex-col bg-cream text-ink">
+  <header class="sticky top-0 z-40 bg-cream/95 backdrop-blur border-b border-stone-300/80">
+    <div class="web-container px-4 sm:px-8 lg:px-12 py-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <img src="RecipME Logo.jpg" alt="RecipME Logo" class="w-10 h-10 rounded-xl object-cover shadow-sm border border-stone-200/80">
+        <div>
+          <span class="font-bold text-xl sm:text-2xl tracking-tight text-ink block leading-none">RecipME Live Dashboard</span>
+          <span class="text-xs text-muted block mt-1">Real-Time Cloudflare D1 Judge Activity</span>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <a href="/" class="btn-secondary !min-h-[40px] !py-1.5 !px-3.5 !text-sm">&larr; Back to App</a>
+        <button id="btn-refresh" type="button" onclick="AdminApp.refresh()" class="btn-main !min-h-[40px] !py-1.5 !px-4 !text-sm hidden">
+          Refresh Now
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="flex-1 w-full web-container px-4 sm:px-8 lg:px-12 py-8">
+    <!-- PASSCODE GATE -->
+    <section id="admin-gate" class="max-w-md mx-auto my-12 bg-white/95 rounded-2xl p-6 sm:p-8 shadow-sm border border-stone-300/90 space-y-4">
+      <h1 class="text-heading">Presenter Dashboard Access</h1>
+      <p class="text-small">Enter the Demo Day passcode to view live recipes and ideas added by judges.</p>
+      <form onsubmit="return AdminApp.unlock(event)" class="space-y-4">
+        <div>
+          <label for="admin-key-input" class="text-small block mb-1">Admin Passcode</label>
+          <input id="admin-key-input" type="password" class="recipme-input" placeholder="Enter passcode (default: LSU4125)" required>
+        </div>
+        <div id="admin-gate-error" class="text-small text-danger hidden"></div>
+        <button type="submit" class="btn-main w-full">Open Live Dashboard</button>
+      </form>
+    </section>
+
+    <!-- LIVE DASHBOARD -->
+    <section id="admin-dashboard" class="hidden space-y-8">
+      <div class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-stone-300/80">
+        <div class="flex items-center gap-2.5">
+          <span class="w-3 h-3 rounded-full bg-tagGreen inline-block animate-pulse"></span>
+          <span id="live-status-text" class="text-small font-medium">Live polling every 4 seconds</span>
+        </div>
+        <div class="flex items-center gap-3 text-small">
+          <label class="flex items-center gap-2 cursor-pointer">
+            <input id="auto-refresh-toggle" type="checkbox" checked onchange="AdminApp.toggleAutoRefresh(this.checked)">
+            <span>Auto-refresh</span>
+          </label>
+          <span>&bull;</span>
+          <span id="last-updated-label">Updated just now</span>
+        </div>
+      </div>
+
+      <!-- SUMMARY METRICS -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-white/95 rounded-2xl p-5 border border-stone-300/80">
+          <span class="text-small block">Active Judges / Guests</span>
+          <strong id="stat-guests" class="text-heading !text-3xl text-primary mt-1 block">0</strong>
+        </div>
+        <div class="bg-white/95 rounded-2xl p-5 border border-stone-300/80">
+          <span class="text-small block">Judge Recipes Added</span>
+          <strong id="stat-recipes" class="text-heading !text-3xl text-ink mt-1 block">0</strong>
+        </div>
+        <div class="bg-white/95 rounded-2xl p-5 border border-stone-300/80">
+          <span class="text-small block">Judge Ideas Captured</span>
+          <strong id="stat-ideas" class="text-heading !text-3xl text-tagGreen mt-1 block">0</strong>
+        </div>
+      </div>
+
+      <!-- LIVE JUDGE CARDS -->
+      <div class="space-y-4">
+        <h2 class="text-heading !text-2xl">Live Judge Submissions</h2>
+        <div id="live-guests-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
+      </div>
+
+      <!-- PREPOPULATED ACCOUNTS -->
+      <div class="space-y-4 pt-6 border-t border-stone-300/80">
+        <h2 class="text-heading !text-xl text-muted">Prepopulated Presenter Accounts</h2>
+        <div id="demo-accounts-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-6"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const AdminApp = {
+      adminKey: '',
+      timer: null,
+      autoRefresh: true,
+
+      init() {
+        const params = new URLSearchParams(window.location.search);
+        const urlKey = params.get('key');
+        const savedKey = sessionStorage.getItem('recipme_admin_key');
+        if (urlKey || savedKey) {
+          this.adminKey = urlKey || savedKey;
+          this.refresh(true);
+        }
+      },
+
+      esc(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      },
+
+      async unlock(event) {
+        event.preventDefault();
+        const input = document.getElementById('admin-key-input');
+        this.adminKey = (input ? input.value : '').trim();
+        await this.refresh(true);
+        return false;
+      },
+
+      toggleAutoRefresh(enabled) {
+        this.autoRefresh = enabled;
+        if (this.timer) clearInterval(this.timer);
+        if (enabled && this.adminKey) {
+          this.timer = setInterval(() => this.refresh(false), 4000);
+        }
+        const statusEl = document.getElementById('live-status-text');
+        if (statusEl) {
+          statusEl.textContent = enabled ? 'Live polling every 4 seconds' : 'Auto-refresh paused';
+        }
+      },
+
+      async refresh(isInitial = false) {
+        const errEl = document.getElementById('admin-gate-error');
+        try {
+          const res = await fetch('/api/admin/overview', {
+            headers: { 'X-Admin-Key': this.adminKey }
+          });
+
+          if (!res.ok) {
+            if (isInitial && errEl) {
+              errEl.textContent = 'Incorrect passcode. Please try again.';
+              errEl.classList.remove('hidden');
+            }
+            return;
+          }
+
+          const data = await res.json();
+          sessionStorage.setItem('recipme_admin_key', this.adminKey);
+
+          document.getElementById('admin-gate').classList.add('hidden');
+          document.getElementById('admin-dashboard').classList.remove('hidden');
+          document.getElementById('btn-refresh').classList.remove('hidden');
+
+          this.renderDashboard(data);
+
+          if (isInitial && this.autoRefresh && !this.timer) {
+            this.timer = setInterval(() => this.refresh(false), 4000);
+          }
+        } catch (err) {
+          if (isInitial && errEl) {
+            errEl.textContent = 'Could not reach the server. Please try again.';
+            errEl.classList.remove('hidden');
+          }
+        }
+      },
+
+      renderGuestCard(g) {
+        const joined = g.created_at ? new Date(g.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+        return `
+          <article class="bg-white/95 rounded-2xl p-6 border border-stone-300/90 shadow-sm space-y-4">
+            <div class="flex items-center justify-between gap-3 pb-3 border-b border-stone-200">
+              <div class="flex items-center gap-3">
+                <span class="w-9 h-9 rounded-full text-white font-semibold flex items-center justify-center shrink-0"
+                      style="background-color: ${this.esc(g.badge_color || '#C2410C')}">
+                  ${this.esc((g.guest_name || '?').charAt(0).toUpperCase())}
+                </span>
+                <div>
+                  <h3 class="text-heading !text-xl">${this.esc(g.guest_name)}</h3>
+                  <span class="text-small">${g.is_prepopulated ? 'Prepopulated Demo Account' : `Joined at ${this.esc(joined)}`}</span>
+                </div>
+              </div>
+              <span class="text-small font-medium px-3 py-1 rounded-full bg-cream border border-stone-300">
+                ${g.recipes.length} ${g.recipes.length === 1 ? 'recipe' : 'recipes'} &bull; ${g.ideas.length} ${g.ideas.length === 1 ? 'idea' : 'ideas'}
+              </span>
+            </div>
+
+            <div class="space-y-3">
+              <h4 class="text-small font-semibold uppercase tracking-wide">Recipes</h4>
+              ${g.recipes.length === 0 ? `
+                <p class="text-small italic">No recipes added yet.</p>
+              ` : `
+                <ul class="space-y-2.5">
+                  ${g.recipes.map(r => `
+                    <li class="p-3 rounded-xl bg-cream border border-stone-200/90 space-y-1">
+                      <div class="flex items-center justify-between gap-2">
+                        <strong class="text-body font-semibold">${this.esc(r.recipe_title || 'Untitled Recipe')}</strong>
+                        <span class="text-small shrink-0">${r.ingredient_count} ing &bull; ${r.step_count} steps</span>
+                      </div>
+                      ${r.description ? `<p class="text-small line-clamp-2">${this.esc(r.description)}</p>` : ''}
+                      ${r.tags && r.tags.length ? `
+                        <div class="flex flex-wrap gap-1 pt-1">
+                          ${r.tags.map(t => `<span class="px-2.5 py-0.5 rounded-full text-xs bg-tagGreen text-white">${this.esc(t)}</span>`).join('')}
+                        </div>
+                      ` : ''}
+                    </li>
+                  `).join('')}
+                </ul>
+              `}
+            </div>
+
+            ${g.ideas.length > 0 ? `
+              <div class="space-y-2 pt-2 border-t border-stone-200">
+                <h4 class="text-small font-semibold uppercase tracking-wide">Cooking Ideas</h4>
+                <ul class="space-y-1.5">
+                  ${g.ideas.map(i => `
+                    <li class="text-small">
+                      <strong class="text-ink">${this.esc(i.idea_title)}</strong>${i.idea_note && i.idea_note !== i.idea_title ? ` — ${this.esc(i.idea_note)}` : ''}
+                    </li>
+                  `).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </article>
+        `;
+      },
+
+      renderDashboard(data) {
+        document.getElementById('stat-guests').textContent = data.summary.live_guests;
+        document.getElementById('stat-recipes').textContent = data.summary.live_recipes;
+        document.getElementById('stat-ideas').textContent = data.summary.live_ideas;
+        document.getElementById('last-updated-label').textContent =
+          'Updated ' + new Date(data.generated_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+
+        const liveGrid = document.getElementById('live-guests-grid');
+        if (data.live_guests.length === 0) {
+          liveGrid.innerHTML = `
+            <div class="lg:col-span-2 py-12 text-center bg-white/80 rounded-2xl border border-dashed border-stone-300">
+              <p class="text-heading mb-1">Waiting for judges to scan the QR code...</p>
+              <p class="text-small">As soon as someone enters their name and adds a recipe, it will appear here live.</p>
+            </div>
+          `;
+        } else {
+          liveGrid.innerHTML = data.live_guests.map(g => this.renderGuestCard(g)).join('');
+        }
+
+        const demoGrid = document.getElementById('demo-accounts-grid');
+        demoGrid.innerHTML = data.demo_accounts.map(g => this.renderGuestCard(g)).join('');
+      }
+    };
+
+    AdminApp.init();
+  </script>
+</body>
+</html>

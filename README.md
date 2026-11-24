@@ -1,6 +1,7 @@
 # RecipME — Personal Recipe Notebook & Idea Keeper
 
-**Live Demo:** [https://recipme.lsurecipme.workers.dev/](https://recipme.lsurecipme.workers.dev/)
+**Live Demo:** [https://recipme.lsurecipme.workers.dev/](https://recipme.lsurecipme.workers.dev/)  
+**Live Presenter Dashboard:** `https://recipme.lsurecipme.workers.dev/admin.html`
 
 RecipME is a calm, ad-free personal recipe notebook and cooking idea keeper built for home cooks who want to capture meal sparks, preserve family recipes, and cook without clutter.
 
@@ -11,40 +12,39 @@ Built for **ISDS 4125: Analysis and Design of Information Systems (Fall 2026)** 
 ## Try the Live App (Demo Day Access)
 
 1. Open **[https://recipme.lsurecipme.workers.dev/](https://recipme.lsurecipme.workers.dev/)** on any phone, tablet, or desktop browser.
-2. Click the **Demo Day Login** button to automatically prefill the presentation credentials (`demoday@recipme.app` / `RecipME2026!`).
-3. Click **Sign In** to explore your own isolated local sandbox.
-
----
-
-## Key Features
-
-- **Idea-to-Recipe Workflow:** Jot down quick meal sparks in the **Ideas** tab and click **Turn into Recipe** to automatically carry the title and notes into a structured recipe draft.
-- **Effortless Recipe Studio:**
-  - **Smart Ingredient Parsing:** Type naturally (e.g., `2 lb chicken thighs`) and RecipME automatically separates quantity, unit, and ingredient name.
-  - **Reorderable Cooking Steps:** Add numbered steps and rearrange them via drag-and-drop or Up/Down controls.
-  - **Auto-Calculated Total Time:** Prep time and cook time dynamically calculate total time.
-  - **Personalization:** Add a 1–5 difficulty rating, preset or custom tags, personal cooking tips, and a finished-dish photo.
-- **Instant Search & Filtering:** Search across recipe titles, ingredients, and notes in real time, or filter by tag chips (e.g., *Chicken*, *Weeknight*, *Gluten-Free*, *Holiday*).
-- **Kitchen Accessibility (Settings):**
-  - **Warm Dark Mode:** Low-glare charcoal theme designed for dimly lit kitchens.
-  - **Larger Text Mode:** Scales typography across the entire app for counter-distance reading.
-- **Fault Avoidance & Safety:** Real-time auto-save on every keystroke, delete confirmation dialogs, automatic cleanup of empty drafts, and plain-language storage-full warnings.
+2. Enter your name and click **Start Cooking** to create your own isolated 24-hour notebook backed by Cloudflare D1.
+3. Or select **Demo Day Host** / **Family Kitchen** to explore a prepopulated recipe collection.
 
 ---
 
 ## Architecture & Tech Stack
 
-- **Frontend:** Responsive HTML5, Tailwind CSS, custom serif typography (`style.css`), and modular Vanilla JavaScript (`script.js`)—no build step required.
-- **Data Layer (3NF Local-First Schema):** Modeled in **Third Normal Form (3NF)** across 7 normalized tables (`idea`, `recipe`, `step`, `ingredient`, `recipe_ingredient`, `tag`, and `recipe_tag`) and persisted locally in the browser via `localStorage`. Total time is computed dynamically to maintain 3NF.
-- **Hosting & Deployment:** Continuously deployed from GitHub to **Cloudflare Workers** for global edge delivery and automatic HTTPS.
+- **Frontend (`public/`):** Responsive HTML5, Tailwind CSS, custom serif typography (`style.css`), and modular Vanilla JavaScript (`script.js`).
+- **Backend API (`worker.js`):** Cloudflare Worker handling guest session creation (`HttpOnly` cookie), isolated CRUD sync (`/api/state`), prepopulated demo login (`/api/demo-login`), live presenter overview (`/api/admin/overview`), and hourly Cron Trigger cleanup of expired 24-hour guest sessions.
+- **Database (`schema.sql`):** Live **Cloudflare D1 (SQLite)** relational database normalized to **Third Normal Form (3NF)** across `guests`, `idea`, `recipe`, `step`, `ingredient`, `recipe_ingredient`, `tag`, and `recipe_tag` with `ON DELETE CASCADE`.
 
 ---
 
 ## Project Structure
 
 ```text
-├── index.html          # Application shell, login screen, and modals (Settings, Account, Delete)
-├── style.css           # Design system, Warm Dark Mode, Larger Text Mode, and component styles
-├── script.js           # StorageService (3NF localStorage), IdeasManager, RecipeManager, Search & UI
-├── RecipME Logo.jpg    # Custom RecipME branding & favicon
-└── README.md           # Project overview and setup instructions
+├── wrangler.jsonc          # Cloudflare Workers, Static Assets, D1 binding, and Cron Trigger config
+├── schema.sql              # 3NF D1 schema + prepopulated Demo Day presenter accounts
+├── worker.js               # Cloudflare Worker API + hourly 24-hour guest cleanup
+├── public/
+│   ├── index.html          # Guest entry screen, app shell, and modals
+│   ├── script.js           # Cloudflare D1 StorageService, IdeasManager, RecipeManager, Search & UI
+│   ├── style.css           # Design system, Warm Dark Mode, Larger Text Mode
+│   ├── admin.html          # Live Demo Day presenter dashboard (polls D1 every 4s)
+│   └── RecipME Logo.jpg    # Custom RecipME branding & favicon
+└── README.md
+```
+
+---
+
+## Team
+
+- **Mackenzie Stevens**
+- **Abby Myers**
+- **Haley Johnson**
+- **Molly Buras**

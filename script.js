@@ -1,197 +1,137 @@
 /*************************************************************************
- * PREDETERMINED DEMO ACCOUNT (For Live Presentation)
- *************************************************************************/
-const DEMO_ACCOUNTS = {
-  demoDay: {
-    id: 'demo_day_user',
-    name: 'Demo Day',
-    email: 'demoday@recipme.app',
-    password: 'RecipME2026!',
-    initials: 'DD',
-    badgeColor: '#C2410C'
-  }
-};
-
-/*************************************************************************
- * LAYER 1: STORAGE SERVICE & LOCAL RELATIONAL DATABASE (3NF Schema)
+ * LAYER 1: STORAGE SERVICE (Cloudflare D1 API + Debounced Auto-Sync)
  *************************************************************************/
 const StorageService = {
-  SESSION_KEY: 'recipme_active_demo_user_v2',
   currentUser: null,
   db: null,
+  _saveTimer: null,
+  _pendingSave: false,
 
-  getStorageKey() {
-    const uid = this.currentUser ? this.currentUser.id : DEMO_ACCOUNTS.demoDay.id;
-    return `recipme_sqlite_db_${uid}_v1`;
-  },
-
-  getSeedDatabase() {
-    const now = new Date().toISOString();
-    const baseTags = [
-      { tag_id: 1, tag_name: "Chicken", is_preset: true },
-      { tag_id: 2, tag_name: "Weeknight", is_preset: true },
-      { tag_id: 3, tag_name: "Fish", is_preset: true },
-      { tag_id: 4, tag_name: "Gluten-Free", is_preset: true },
-      { tag_id: 5, tag_name: "Holiday", is_preset: true },
-      { tag_id: 6, tag_name: "Vegetarian", is_preset: true }
-    ];
-
+  getEmptyDatabase() {
     return {
-      idea: [
-        {
-          idea_id: 1,
-          idea_title: "Honey chipotle chicken",
-          idea_note: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.",
-          created_at: now,
-          updated_at: now
-        },
-        {
-          idea_id: 2,
-          idea_title: "Smoked turkey gumbo variation",
-          idea_note: "Try Kayla's idea: smoked turkey instead of sausage for next Thanksgiving.",
-          created_at: now,
-          updated_at: now
-        },
-        {
-          idea_id: 3,
-          idea_title: "Blackened catfish tacos with lime crema",
-          idea_note: "Quick weeknight fish tacos with shredded cabbage, lime juice, and garlic sour cream.",
-          created_at: now,
-          updated_at: now
-        }
+      idea: [],
+      recipe: [],
+      step: [],
+      ingredient: [],
+      recipe_ingredient: [],
+      tag: [
+        { tag_id: 1, tag_name: "Chicken", is_preset: true },
+        { tag_id: 2, tag_name: "Weeknight", is_preset: true },
+        { tag_id: 3, tag_name: "Fish", is_preset: true },
+        { tag_id: 4, tag_name: "Gluten-Free", is_preset: true },
+        { tag_id: 5, tag_name: "Holiday", is_preset: true },
+        { tag_id: 6, tag_name: "Vegetarian", is_preset: true }
       ],
-      recipe: [
-        {
-          recipe_id: 1,
-          source_idea_id: 1,
-          recipe_title: "Honey chipotle chicken",
-          description: "Honey chipotle chicken. Try with lime and garlic, maybe over rice.",
-          prep_time_min: 15,
-          cook_time_min: 20,
-          servings: 4,
-          difficulty: 2,
-          personal_notes: "Double the sauce next time.",
-          photo_path: "",
-          created_at: now,
-          updated_at: now
-        },
-        {
-          recipe_id: 2,
-          source_idea_id: null,
-          recipe_title: "Mama's Chicken and Sausage Gumbo",
-          description: "The gumbo we make every Christmas Eve. Dark roux, takes patience.",
-          prep_time_min: 45,
-          cook_time_min: 135,
-          servings: 12,
-          difficulty: 4,
-          personal_notes: "Stir the whole time. Don't walk away.",
-          photo_path: "",
-          created_at: now,
-          updated_at: now
-        }
-      ],
-      step: [
-        { step_id: 1, recipe_id: 1, step_number: 1, instruction: "Mix honey, chopped chipotle, lime juice, and garlic." },
-        { step_id: 2, recipe_id: 1, step_number: 2, instruction: "Marinate the chicken for 10 minutes." },
-        { step_id: 3, recipe_id: 2, step_number: 1, instruction: "Make the roux with oil and flour, stirring until it is the color of chocolate." },
-        { step_id: 4, recipe_id: 2, step_number: 2, instruction: "Add chopped onions, bell pepper, and celery and stir until softened." },
-        { step_id: 5, recipe_id: 2, step_number: 3, instruction: "Simmer gently with stock, chicken, and sliced andouille sausage." }
-      ],
-      ingredient: [
-        { ingredient_id: 1, ingredient_name: "chicken thighs" },
-        { ingredient_id: 2, ingredient_name: "honey" },
-        { ingredient_id: 3, ingredient_name: "chipotle peppers in adobo" },
-        { ingredient_id: 4, ingredient_name: "limes" },
-        { ingredient_id: 5, ingredient_name: "chicken" },
-        { ingredient_id: 6, ingredient_name: "andouille sausage" },
-        { ingredient_id: 7, ingredient_name: "vegetable oil" },
-        { ingredient_id: 8, ingredient_name: "all-purpose flour" },
-        { ingredient_id: 9, ingredient_name: "green onions" }
-      ],
-      recipe_ingredient: [
-        { recipe_id: 1, ingredient_id: 1, quantity: 2, unit: "lb", line_order: 1 },
-        { recipe_id: 1, ingredient_id: 2, quantity: 3, unit: "tbsp", line_order: 2 },
-        { recipe_id: 1, ingredient_id: 3, quantity: 2, unit: "", line_order: 3 },
-        { recipe_id: 1, ingredient_id: 4, quantity: 2, unit: "", line_order: 4 },
-        { recipe_id: 2, ingredient_id: 5, quantity: 2, unit: "lb", line_order: 1 },
-        { recipe_id: 2, ingredient_id: 6, quantity: 1, unit: "lb", line_order: 2 },
-        { recipe_id: 2, ingredient_id: 7, quantity: 1, unit: "cup", line_order: 3 },
-        { recipe_id: 2, ingredient_id: 8, quantity: 1, unit: "cup", line_order: 4 },
-        { recipe_id: 2, ingredient_id: 9, quantity: 1, unit: "bunch", line_order: 5 }
-      ],
-      tag: baseTags,
-      recipe_tag: [
-        { recipe_id: 1, tag_id: 1 },
-        { recipe_id: 1, tag_id: 2 },
-        { recipe_id: 1, tag_id: 4 },
-        { recipe_id: 2, tag_id: 1 },
-        { recipe_id: 2, tag_id: 5 }
-      ]
+      recipe_tag: []
     };
   },
 
-  init() {
+  async init() {
     try {
-      const savedSession = localStorage.getItem(this.SESSION_KEY);
-      if (savedSession) {
-        this.currentUser = JSON.parse(savedSession);
-        this.loadActiveUserDatabase();
-      } else {
-        this.currentUser = null;
-        this.db = this.getSeedDatabase();
-      }
-    } catch (err) {
-      console.error("Database initialization fallback:", err);
-      this.currentUser = null;
-      this.db = this.getSeedDatabase();
-    }
-  },
-
-  loadActiveUserDatabase() {
-    try {
-      const saved = localStorage.getItem(this.getStorageKey());
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && Array.isArray(parsed.recipe) && Array.isArray(parsed.idea) && Array.isArray(parsed.tag)) {
-          this.db = parsed;
+      const res = await fetch('/api/state', { credentials: 'same-origin' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.authenticated && data.user && data.db) {
+          this.currentUser = this.normalizeUser(data.user);
+          this.db = data.db;
           return;
         }
       }
-      this.db = this.getSeedDatabase();
-      this.commit();
+      this.currentUser = null;
+      this.db = this.getEmptyDatabase();
     } catch (err) {
-      this.db = this.getSeedDatabase();
+      console.error("Failed to check active session:", err);
+      this.currentUser = null;
+      this.db = this.getEmptyDatabase();
     }
   },
 
-  setActiveUser(userObj) {
-    this.currentUser = userObj;
-    if (userObj) {
-      try {
-        localStorage.setItem(this.SESSION_KEY, JSON.stringify(userObj));
-      } catch (e) {}
-      this.loadActiveUserDatabase();
-    } else {
-      try {
-        localStorage.removeItem(this.SESSION_KEY);
-      } catch (e) {}
-    }
+  normalizeUser(apiUser) {
+    return {
+      id: apiUser.guest_id,
+      name: apiUser.guest_name,
+      isPrepopulated: Boolean(apiUser.is_prepopulated),
+      badgeColor: apiUser.badge_color || '#C2410C',
+      expiresAt: apiUser.expires_at || null
+    };
   },
 
-  clearSession() {
-    this.currentUser = null;
+  async guestLogin(guestName) {
+    const res = await fetch('/api/guest-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ name: guestName })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || 'Could not start guest session.');
+    }
+    this.currentUser = this.normalizeUser(data.user);
+    this.db = data.db || this.getEmptyDatabase();
+    return this.currentUser;
+  },
+
+  async prepopulatedLogin(accountId) {
+    const res = await fetch('/api/demo-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ accountId })
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      throw new Error(data.error || 'Could not load demo account.');
+    }
+    this.currentUser = this.normalizeUser(data.user);
+    this.db = data.db || this.getEmptyDatabase();
+    return this.currentUser;
+  },
+
+  async clearSession() {
+    await this.flushPendingSave();
     try {
-      localStorage.removeItem(this.SESSION_KEY);
+      await fetch('/api/logout', { method: 'POST', credentials: 'same-origin' });
     } catch (e) {}
+    this.currentUser = null;
+    this.db = this.getEmptyDatabase();
   },
 
   commit() {
+    if (!this.currentUser || !this.db) return;
+    this._pendingSave = true;
+    UI.notifyAutosave('Saving...');
+    UI.updateNavBadges();
+
+    if (this._saveTimer) clearTimeout(this._saveTimer);
+    this._saveTimer = setTimeout(() => {
+      this.flushPendingSave();
+    }, 350);
+  },
+
+  async flushPendingSave() {
+    if (!this._pendingSave || !this.currentUser || !this.db) return;
+    if (this._saveTimer) {
+      clearTimeout(this._saveTimer);
+      this._saveTimer = null;
+    }
+    this._pendingSave = false;
+
     try {
-      localStorage.setItem(this.getStorageKey(), JSON.stringify(this.db));
+      const res = await fetch('/api/state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify(this.db)
+      });
+
       const banner = document.getElementById('storage-error-banner');
-      if (banner) banner.classList.add('hidden');
-      UI.notifyAutosave();
-      UI.updateNavBadges();
+      if (res.ok) {
+        if (banner) banner.classList.add('hidden');
+        UI.notifyAutosave('Saved to cloud');
+      } else {
+        if (banner) banner.classList.remove('hidden');
+      }
     } catch (err) {
       const banner = document.getElementById('storage-error-banner');
       if (banner) banner.classList.remove('hidden');
@@ -199,7 +139,7 @@ const StorageService = {
   },
 
   nextId(tableName, pkField) {
-    const rows = this.db[tableName] || [];
+    const rows = (this.db && this.db[tableName]) || [];
     if (rows.length === 0) return 1;
     return Math.max(...rows.map(r => Number(r[pkField]) || 0)) + 1;
   }
@@ -709,11 +649,11 @@ const SearchAndFilter = {
 };
 
 /*************************************************************************
- * LAYER 3: FULL-WIDTH WEB UI LAYER + DEMO LOGIN CONTROLLER
+ * LAYER 3: FULL-WIDTH WEB UI LAYER + GUEST / DEMO SESSION CONTROLLER
  *************************************************************************/
 const UI = {
   currentView: 'recipes',
-  activeRecipeId: 1,
+  activeRecipeId: null,
   activeIdeaId: null,
   isNewRecipeMode: false,
   searchQuery: '',
@@ -723,9 +663,9 @@ const UI = {
   darkModeEnabled: false,
   draggedStepIndex: null,
 
-  init() {
+  async init() {
     this.loadPreferences();
-    StorageService.init();
+    await StorageService.init();
     this.syncScreenVisibility();
   },
 
@@ -792,6 +732,8 @@ const UI = {
 
     if (StorageService.db && StorageService.db.recipe.length > 0) {
       this.activeRecipeId = StorageService.db.recipe[0].recipe_id;
+    } else {
+      this.activeRecipeId = null;
     }
     this.renderAuthHeader();
     this.updateNavBadges();
@@ -807,51 +749,101 @@ const UI = {
       .replace(/"/g, '&quot;');
   },
 
-  /* =====================================================================
-   * DEMO DAY LOG IN HANDLERS
-   * ===================================================================== */
+  showLoginStatus(msg, isError = false) {
+    const el = document.getElementById('landing-login-status');
+    if (!el) return;
+    el.textContent = msg;
+    el.className = isError ? 'text-small text-danger font-medium' : 'text-small text-tagGreen font-medium';
+    el.classList.remove('hidden');
+  },
+
+  clearLoginMessages() {
+    const el = document.getElementById('landing-login-status');
+    if (el) {
+      el.textContent = '';
+      el.classList.add('hidden');
+    }
+  },
+
+  async handleGuestLogin(event) {
+    if (event) event.preventDefault();
+    const input = document.getElementById('guest-name-input');
+    const btn = document.getElementById('btn-guest-start');
+    const name = (input ? input.value : '').trim();
+    if (!name) {
+      this.showLoginStatus('Please enter your name to continue.', true);
+      return false;
+    }
+
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Opening notebook...';
+    }
+    try {
+      await StorageService.guestLogin(name);
+      this.selectedTagFilterId = null;
+      this.searchQuery = '';
+      this.currentView = 'recipes';
+      if (input) input.value = '';
+      this.syncScreenVisibility();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      this.showLoginStatus(err.message || 'Could not sign in. Please try again.', true);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Start Cooking';
+      }
+    }
+    return false;
+  },
+
+  async handlePrepopulatedLogin(accountId) {
+    this.showLoginStatus('Loading demo kitchen...', false);
+    try {
+      await StorageService.prepopulatedLogin(accountId);
+      this.selectedTagFilterId = null;
+      this.searchQuery = '';
+      this.currentView = 'recipes';
+      this.syncScreenVisibility();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      this.showLoginStatus(err.message || 'Could not load demo kitchen.', true);
+    }
+  },
+
   renderAuthHeader() {
     const slot = document.getElementById('auth-header-slot');
     if (!slot) return;
     const user = StorageService.currentUser;
 
     if (!user) {
-      slot.innerHTML = `
-        <button type="button" onclick="UI.logoutToLoginScreen()" class="btn-secondary !min-h-[40px] sm:!min-h-[42px] !py-1.5 !px-3.5 !text-sm">
-          Demo Day Login
-        </button>
-      `;
+      slot.innerHTML = '';
       return;
     }
 
     slot.innerHTML = `
       <button type="button" onclick="UI.openAuthModal()"
               class="px-3 py-1.5 rounded-full border border-stone-300 bg-white/90 hover:bg-white text-xs sm:text-sm font-medium text-ink min-h-[40px] sm:min-h-[42px] flex items-center gap-2 transition"
-              title="Signed in as ${this.esc(user.name)} (${this.esc(user.email)}).">
-        <span class="w-6 h-6 rounded-full text-white flex items-center justify-center shrink-0"
-              style="background-color: ${user.badgeColor || '#C2410C'}" aria-hidden="true">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-            <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v1.2c0 .7.5 1.2 1.2 1.2h16.8c.7 0 1.2-.5 1.2-1.2v-1.2c0-3.2-6.4-4.8-9.6-4.8z"/>
-          </svg>
+              title="Signed in as ${this.esc(user.name)}">
+        <span class="w-6 h-6 rounded-full text-white text-xs font-semibold flex items-center justify-center shrink-0"
+              style="background-color: ${this.esc(user.badgeColor || '#C2410C')}">
+          ${this.esc((user.name || '?').charAt(0).toUpperCase())}
         </span>
         <span class="hidden md:inline">${this.esc(user.name)}</span>
       </button>
     `;
   },
 
-  clearLoginMessages() {
-    ['login-status-msg', 'landing-login-status'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.textContent = '';
-        el.classList.add('hidden');
-      }
-    });
-  },
-
   openAuthModal() {
     const modal = document.getElementById('auth-modal');
-    this.clearLoginMessages();
+    const sub = document.getElementById('account-modal-subtitle');
+    if (sub && StorageService.currentUser) {
+      const u = StorageService.currentUser;
+      sub.textContent = u.isPrepopulated
+        ? `Signed in to prepopulated account: ${u.name}`
+        : `Signed in as ${u.name} (24-hour guest session)`;
+    }
     if (modal) modal.classList.remove('hidden');
   },
 
@@ -860,87 +852,15 @@ const UI = {
     if (modal) modal.classList.add('hidden');
   },
 
-  logoutToLoginScreen() {
+  async logoutToLoginScreen() {
     this.cleanupEmptyActiveRecipe();
     this.closeAuthModal();
-    StorageService.clearSession();
-    ['landing-login-email', 'login-email', 'landing-login-password', 'login-password'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = '';
-    });
-    const signInBtn = document.getElementById('btn-landing-sign-in');
-    if (signInBtn) {
-      signInBtn.classList.remove('btn-main');
-      signInBtn.classList.add('btn-secondary');
-    }
+    await StorageService.clearSession();
     this.syncScreenVisibility();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   },
 
-  triggerDemoPrefill() {
-    const account = DEMO_ACCOUNTS.demoDay;
-
-    ['landing-login-email', 'login-email'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = account.email;
-    });
-    ['landing-login-password', 'login-password'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.value = account.password;
-    });
-    ['landing-login-status', 'login-status-msg'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.textContent = 'Demo Day credentials prefilled - click Sign In below.';
-        el.className = 'text-small text-tagGreen font-medium';
-        el.classList.remove('hidden');
-      }
-    });
-
-    const signInBtn = document.getElementById('btn-landing-sign-in');
-    if (signInBtn) {
-      signInBtn.classList.remove('btn-secondary');
-      signInBtn.classList.add('btn-main');
-      signInBtn.focus();
-    }
-  },
-
-  handleCredentialLogin(event) {
-    event.preventDefault();
-    const form = event.target;
-    const emailInput = form.querySelector('input[type="email"]');
-    const passInput = form.querySelector('input[type="password"]');
-    const email = (emailInput ? emailInput.value : '').trim().toLowerCase();
-    const pass = passInput ? passInput.value : '';
-
-    if (email === DEMO_ACCOUNTS.demoDay.email && pass === DEMO_ACCOUNTS.demoDay.password) {
-      this.completeDemoSignIn(DEMO_ACCOUNTS.demoDay);
-      return;
-    }
-
-    ['landing-login-status', 'login-status-msg'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        el.textContent = 'Invalid email or password. Click "Demo Day Login" above to prefill.';
-        el.className = 'text-small text-danger font-medium';
-        el.classList.remove('hidden');
-      }
-    });
-  },
-
-  completeDemoSignIn(account) {
-    StorageService.setActiveUser(account);
-    this.selectedTagFilterId = null;
-    this.searchQuery = '';
-    this.currentView = 'recipes';
-    this.closeAuthModal();
-    this.syncScreenVisibility();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  },
-
-  updateNavBadges() {
-    // Number badges omitted per clean header layout
-  },
+  updateNavBadges() {},
 
   updateNavActiveStyles() {
     const activeTab = (this.currentView === 'ideas') ? 'ideas' : 'recipes';
@@ -965,9 +885,9 @@ const UI = {
     this.savePreferences();
   },
 
-  notifyAutosave() {
+  notifyAutosave(label = 'Saved to cloud') {
     document.querySelectorAll('.autosave-indicator').forEach(el => {
-      el.textContent = 'Saved automatically';
+      el.textContent = label;
       el.classList.remove('autosave-flash');
       void el.offsetWidth;
       el.classList.add('autosave-flash');
@@ -1051,12 +971,13 @@ const UI = {
   },
 
   /* =====================================================================
-   * VIEW 1: FULL-SCREEN DESKTOP RECIPES DIRECTORY
+   * VIEW 1: RECIPES DIRECTORY
    * ===================================================================== */
   buildRecipesListColumnHTML() {
     const allTags = StorageService.db.tag;
     const matchingRecipes = SearchAndFilter.findRecipes(this.searchQuery, this.selectedTagFilterId);
-    const ownerName = StorageService.currentUser ? StorageService.currentUser.name : 'Demo Day';
+    const ownerName = StorageService.currentUser ? StorageService.currentUser.name : 'My';
+    const hasAnyRecipes = StorageService.db.recipe.length > 0;
 
     return `
       <div class="space-y-8">
@@ -1106,7 +1027,16 @@ const UI = {
           }).join('')}
         </div>
 
-        ${matchingRecipes.length === 0 ? `
+        ${!hasAnyRecipes ? `
+          <div class="py-16 text-center border-t border-b border-stone-300/70 space-y-4">
+            <p class="text-heading">Your personal notebook is ready</p>
+            <p class="text-small max-w-md mx-auto">Add your first recipe or jot down a quick cooking idea in the Ideas tab—everything saves live to Cloudflare D1.</p>
+            <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button onclick="UI.startNewBlankRecipe()" class="btn-main">+ Add your first recipe</button>
+              <button onclick="UI.switchTab('ideas')" class="btn-secondary">Capture a cooking idea</button>
+            </div>
+          </div>
+        ` : matchingRecipes.length === 0 ? `
           <div class="py-16 text-center border-t border-b border-stone-300/70">
             <p class="text-heading mb-2">No recipes match your search</p>
             <p class="text-small mb-6">Try another keyword or clear the active tag filter.</p>
@@ -1193,7 +1123,7 @@ const UI = {
   },
 
   /* =====================================================================
-   * VIEW 2: FULL-SCREEN DESKTOP IDEAS WORKSPACE
+   * VIEW 2: IDEAS WORKSPACE
    * ===================================================================== */
   buildIdeasListColumnHTML() {
     const ideas = IdeasManager.getAllIdeas();
@@ -1205,7 +1135,7 @@ const UI = {
             <h1 class="text-heading !text-3xl">Cooking Ideas</h1>
             <p class="text-small mt-1">Click any idea title to view or edit its note, or turn it into a recipe</p>
           </div>
-          <span class="autosave-indicator text-small">Saved automatically</span>
+          <span class="autosave-indicator text-small">Saved to cloud</span>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
@@ -1325,7 +1255,7 @@ const UI = {
   },
 
   /* =====================================================================
-   * VIEW 3: FULL-WIDTH DESKTOP RECIPE EDITOR
+   * VIEW 3: RECIPE EDITOR
    * ===================================================================== */
   buildRecipeEditorCardHTML(recipeId) {
     const recipe = RecipeManager.getHydratedRecipe(recipeId);
@@ -1347,7 +1277,7 @@ const UI = {
           </div>
 
           <div class="flex items-center gap-2.5 sm:gap-4 ml-auto">
-            <span class="autosave-indicator text-small">Saved automatically</span>
+            <span class="autosave-indicator text-small">Saved to cloud</span>
 
             <div class="relative">
               <button type="button" onclick="UI.toggleEditorMenu()" class="btn-icon" title="Recipe menu">
@@ -1705,13 +1635,36 @@ const UI = {
     }
   },
 
+  // Compress uploaded photos to max 800px JPEG so D1 stays fast and within row limits
   handlePhotoUpload(event, recipeId) {
     const file = event.target.files && event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
-      RecipeManager.updateRecipeField(recipeId, 'photo_path', e.target.result);
-      this.render();
+      const img = new Image();
+      img.onload = () => {
+        const maxDim = 800;
+        let w = img.width;
+        let h = img.height;
+        if (w > maxDim || h > maxDim) {
+          if (w > h) {
+            h = Math.round((h * maxDim) / w);
+            w = maxDim;
+          } else {
+            w = Math.round((w * maxDim) / h);
+            h = maxDim;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.72);
+        RecipeManager.updateRecipeField(recipeId, 'photo_path', compressed);
+        this.render();
+      };
+      img.src = e.target.result;
     };
     reader.readAsDataURL(file);
   },
@@ -1729,7 +1682,7 @@ const UI = {
   },
 
   /* =====================================================================
-   * VIEW 4: FULL-WIDTH DESKTOP RECIPE READING VIEW
+   * VIEW 4: RECIPE READING VIEW
    * ===================================================================== */
   buildRecipeDetailCardHTML(recipeId) {
     const recipe = RecipeManager.getHydratedRecipe(recipeId);
@@ -1747,7 +1700,7 @@ const UI = {
 
           <span class="text-small hidden md:flex items-center gap-2">
             <span class="w-2.5 h-2.5 rounded-full bg-tagGreen inline-block"></span>
-            <span>Screen stays awake while cooking</span>
+            <span>Synced live to Cloudflare D1</span>
           </span>
 
           <div class="flex items-center gap-2 sm:gap-2.5 ml-auto md:ml-0">
@@ -1936,6 +1889,10 @@ document.addEventListener('keydown', (e) => {
     UI.closeAuthModal();
     UI.closeDeleteModal();
   }
+});
+
+window.addEventListener('beforeunload', () => {
+  StorageService.flushPendingSave();
 });
 
 if (document.readyState === 'loading') {

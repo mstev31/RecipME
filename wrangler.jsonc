@@ -1,0 +1,32 @@
+{
+  // Cloudflare Workers configuration for RecipME (Static Assets + D1 SQLite + Hourly Cleanup Cron)
+  "name": "recipme",
+  "main": "./worker.js",
+  "compatibility_date": "2026-11-23",
+
+  // Serve frontend files from ./public and route all /api/* requests to worker.js first
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Bind your Cloudflare D1 database
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "recipme-db",
+      "database_id": "7b2d1834-b3e4-4839-8008-af10b0f23f22"
+    }
+  ],
+
+  // Run hourly cleanup to delete expired 24-hour guest sessions
+  "triggers": {
+    "crons": ["0 * * * *"]
+  },
+
+  // Passcode for /admin.html live Demo Day dashboard
+  "vars": {
+    "ADMIN_KEY": "LSU4125"
+  }
+}

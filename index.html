@@ -21,100 +21,12 @@
         }
       }
     };
-
-    window.demoDayPrefill = function () {
-      var emailIds = ['landing-login-email', 'login-email'];
-      var passIds = ['landing-login-password', 'login-password'];
-      var statusIds = ['landing-login-status', 'login-status-msg'];
-
-      emailIds.forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) {
-          el.value = 'demoday@recipme.app';
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-          el.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      });
-
-      passIds.forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) {
-          el.value = 'RecipME2026!';
-          el.dispatchEvent(new Event('input', { bubbles: true }));
-          el.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-      });
-
-      statusIds.forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) {
-          el.textContent = 'Demo Day credentials prefilled - click Sign In below.';
-          el.className = 'text-small text-tagGreen font-medium';
-          el.classList.remove('hidden');
-        }
-      });
-
-      var signInBtn = document.getElementById('btn-landing-sign-in');
-      if (signInBtn) {
-        signInBtn.classList.remove('btn-secondary');
-        signInBtn.classList.add('btn-main');
-        signInBtn.focus();
-      }
-    };
-
-    window.demoDaySignIn = function (event) {
-      if (event) event.preventDefault();
-
-      var form = event && event.target ? event.target : document.getElementById('landing-login-form');
-      var emailInput = form ? form.querySelector('input[type="email"]') : document.getElementById('landing-login-email');
-      var passInput = form ? form.querySelector('input[type="password"]') : document.getElementById('landing-login-password');
-
-      var email = (emailInput ? emailInput.value : '').trim().toLowerCase();
-      var pass = passInput ? passInput.value : '';
-
-      if (email === 'demoday@recipme.app' && pass === 'RecipME2026!') {
-        var demoAccount = {
-          id: 'demo_day_user',
-          name: 'Demo Day',
-          email: 'demoday@recipme.app',
-          password: 'RecipME2026!',
-          initials: 'DD',
-          badgeColor: '#C2410C'
-        };
-
-        if (window.UI && typeof window.UI.completeDemoSignIn === 'function') {
-          window.UI.completeDemoSignIn(demoAccount);
-        } else {
-          try {
-            localStorage.setItem('recipme_active_demo_user_v2', JSON.stringify(demoAccount));
-          } catch (e) {}
-          var loginScreen = document.getElementById('login-screen');
-          var authApp = document.getElementById('authenticated-app');
-          if (loginScreen) loginScreen.classList.add('hidden');
-          if (authApp) authApp.classList.remove('hidden');
-          if (window.UI && typeof window.UI.init === 'function') {
-            window.UI.init();
-          }
-        }
-        return false;
-      }
-
-      ['landing-login-status', 'login-status-msg'].forEach(function (id) {
-        var el = document.getElementById(id);
-        if (el) {
-          el.textContent = 'Invalid email or password. Click "Demo Day Login" above to prefill.';
-          el.className = 'text-small text-danger font-medium';
-          el.classList.remove('hidden');
-        }
-      });
-      return false;
-    };
   </script>
-  <link rel="stylesheet" href="style.css?v=9">
+  <link rel="stylesheet" href="style.css?v=12">
 </head>
 <body class="min-h-screen flex flex-col bg-cream text-ink">
 
-  <!-- INITIAL LOGIN SCREEN -->
+  <!-- INITIAL ENTRY SCREEN -->
   <section id="login-screen" class="min-h-screen flex flex-col justify-between bg-cream px-4 py-8 sm:py-12">
     <div class="web-container flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -146,36 +58,42 @@
         </div>
 
         <div class="bg-white/95 rounded-2xl p-6 sm:p-8 shadow-sm border border-stone-300/90 space-y-5">
-          <button type="button" id="btn-landing-demo-login" onclick="window.demoDayPrefill()" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
-            Demo Day Login
-          </button>
+          <form id="guest-entry-form" onsubmit="return UI.handleGuestLogin(event)" class="space-y-4" autocomplete="off">
+            <div>
+              <label for="guest-name-input" class="text-small block mb-1.5 font-medium">Enter your name to open your private notebook</label>
+              <input type="text" id="guest-name-input" class="recipme-input" maxlength="60" placeholder="e.g., Dr. Piccoli" required>
+            </div>
+            <div id="landing-login-status" class="text-small hidden"></div>
+            <button type="submit" id="btn-guest-start" class="btn-main w-full !min-h-[52px] !text-lg shadow-sm">
+              Start Cooking
+            </button>
+            <p class="text-small text-center">
+              Creates a private 24-hour live database notebook just for you.
+            </p>
+          </form>
 
           <div class="relative flex py-1 items-center">
             <div class="flex-grow border-t border-stone-300/80"></div>
-            <span class="shrink mx-3 text-small">or sign in with email</span>
+            <span class="shrink mx-3 text-small">or explore a prepopulated kitchen</span>
             <div class="flex-grow border-t border-stone-300/80"></div>
           </div>
 
-          <form id="landing-login-form" onsubmit="return window.demoDaySignIn(event)" class="space-y-4" autocomplete="off">
-            <div>
-              <label for="landing-login-email" class="text-small block mb-1">Email</label>
-              <input type="email" id="landing-login-email" class="recipme-input" placeholder="demoday@recipme.app" autocomplete="off" required>
-            </div>
-            <div>
-              <label for="landing-login-password" class="text-small block mb-1">Password</label>
-              <input type="password" id="landing-login-password" class="recipme-input" placeholder="Enter password" autocomplete="off" required>
-            </div>
-            <div id="landing-login-status" class="text-small hidden"></div>
-            <button type="submit" id="btn-landing-sign-in" class="btn-secondary w-full !min-h-[46px] font-semibold">
-              Sign In
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <button type="button" onclick="UI.handlePrepopulatedLogin('demo_presenter_1')" class="btn-secondary !min-h-[46px] !text-sm font-semibold">
+              Demo Day Host
             </button>
-          </form>
+            <button type="button" onclick="UI.handlePrepopulatedLogin('demo_presenter_2')" class="btn-secondary !min-h-[46px] !text-sm font-semibold">
+              Family Kitchen
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="text-center text-small">
-      RecipME Personal Recipe Notebook
+    <div class="text-center text-small flex items-center justify-center gap-4">
+      <span>RecipME Personal Recipe Notebook</span>
+      <span>&bull;</span>
+      <a href="/admin.html" class="underline hover:text-ink">Live Demo Dashboard</a>
     </div>
   </section>
 
@@ -226,7 +144,7 @@
 
     <div id="storage-error-banner" class="hidden web-container mt-4 px-4 sm:px-8 lg:px-12">
       <div class="p-4 rounded-xl bg-red-50 border border-danger text-danger text-body">
-        We could not save your last change because your device's storage is full. Please free up some space so your recipes stay safe.
+        We could not sync your last change to the cloud database. Please check your connection and try again.
       </div>
     </div>
 
@@ -234,10 +152,11 @@
 
     <footer class="border-t border-stone-300/70 mt-16 py-8">
       <div class="web-container px-4 sm:px-8 lg:px-12 flex flex-col sm:flex-row items-center justify-between gap-3 text-small">
-        <span>RecipME Personal Recipe Notebook</span>
+        <span>RecipME Personal Recipe Notebook &bull; Live Cloudflare D1</span>
         <div class="flex items-center gap-4">
+          <a href="/admin.html" class="underline hover:text-ink">Live Demo Dashboard</a>
           <button onclick="UI.logoutToLoginScreen()" class="underline hover:text-ink">
-            Sign Out
+            Switch Account / Sign Out
           </button>
         </div>
       </div>
@@ -288,35 +207,24 @@
   </div>
 
   <!-- ACCOUNT MODAL -->
-  <div id="auth-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-cream rounded-2xl max-w-[430px] w-full p-6 shadow-xl border border-stone-300">
-      <div class="flex items-start justify-between gap-3 mb-2">
-        <h3 class="text-heading">Demo Day Account</h3>
+  <div id="auth-modal" onclick="if(event.target===this) UI.closeAuthModal()" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-cream rounded-2xl max-w-[430px] w-full p-6 shadow-xl border border-stone-300 space-y-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <h3 class="text-heading">Active Session</h3>
+          <p id="account-modal-subtitle" class="text-small mt-1"></p>
+        </div>
         <button type="button" onclick="UI.closeAuthModal()" class="btn-icon !w-9 !h-9" title="Close">X</button>
       </div>
-      <p class="text-small mb-5">
-        Signed in with the <strong>Demo Day</strong> presentation account. You can sign out below to return to the login screen.
+
+      <p class="text-small">
+        Your recipes and ideas are synced live to Cloudflare D1 and isolated to your session cookie.
       </p>
 
-      <button type="button" id="btn-demo-prefill" onclick="window.demoDayPrefill()" class="btn-main w-full mb-5">
-        Demo Day Login
-      </button>
-
-      <form id="modal-login-form" onsubmit="return window.demoDaySignIn(event)" class="space-y-4 pt-4 border-t border-stone-300/80" autocomplete="off">
-        <div>
-          <label for="login-email" class="text-small block mb-1">Email</label>
-          <input type="email" id="login-email" class="recipme-input" placeholder="demoday@recipme.app" autocomplete="off" required>
-        </div>
-        <div>
-          <label for="login-password" class="text-small block mb-1">Password</label>
-          <input type="password" id="login-password" class="recipme-input" placeholder="Enter password" autocomplete="off" required>
-        </div>
-        <div id="login-status-msg" class="text-small hidden"></div>
-        <div class="flex items-center gap-3 pt-1">
-          <button type="button" onclick="UI.logoutToLoginScreen()" class="btn-secondary flex-1">Sign Out</button>
-          <button type="submit" class="btn-main flex-1">Sign In</button>
-        </div>
-      </form>
+      <div class="flex items-center gap-3 pt-2">
+        <button type="button" onclick="UI.closeAuthModal()" class="btn-secondary flex-1">Stay Signed In</button>
+        <button type="button" onclick="UI.logoutToLoginScreen()" class="btn-main flex-1">Sign Out</button>
+      </div>
     </div>
   </div>
 
@@ -338,6 +246,6 @@
     </div>
   </div>
 
-  <script src="script.js?v=11"></script>
+  <script src="script.js?v=12"></script>
 </body>
 </html>
